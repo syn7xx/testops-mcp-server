@@ -237,7 +237,9 @@ Steps:
 1. Repository secret **`NPM_TOKEN`** (npm token with publish access for `@syn7xx`).
 2. **Actions** tab → **Release** in the left list → **Run workflow** → branch **main** → run.
 
-That bumps `package.json`, updates `CHANGELOG.md`, creates a git tag, pushes to `main`, and runs **`npm publish`**. Locally you can use `npm run release` (interactive) or `npm run release:patch` / `:minor` / `:major` instead.
+That bumps `package.json`, updates **`CHANGELOG.md`** (from conventional commits since the last tag), creates a git tag, pushes to `main`, and runs **`npm publish`**. Use commit messages like `feat: ...`, `fix: ...`, `chore: ...` so the changelog has meaningful entries. Locally you can use `npm run release` (interactive) or `npm run release:patch` / `:minor` / `:major` instead.
+
+If you do not want a changelog at all, remove the `@release-it/conventional-changelog` plugin from `release-it.json` and delete `CHANGELOG.md`.
 
 If the **Release** workflow is missing in **Actions**, ensure `.github/workflows/release.yml` is on the **default branch** and that Actions are allowed in the repository **Settings → Actions → General**.
 
