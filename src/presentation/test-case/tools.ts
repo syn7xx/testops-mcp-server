@@ -13,6 +13,30 @@ import {
   listTestCasesInTree,
 } from '../../domain/test-case/index.js';
 
+const testCaseIdOnly = z.object({
+  id: z.number().describe('Allure test case ID (same as in TestOps UI / URL)'),
+});
+
+async function handleGetTestCaseScenario(args: { id: number }) {
+  const result = await getTestCaseScenario(args.id);
+  if (!isSuccess(result)) {
+    return {
+      content: [
+        { type: 'text' as const, text: `Error: ${result.error.message}` },
+      ],
+      isError: true,
+    };
+  }
+  return {
+    content: [
+      {
+        type: 'text' as const,
+        text: JSON.stringify(result.value, null, 2),
+      },
+    ],
+  };
+}
+
 export const registerTestCaseTools = (server: McpServer) => {
   server.registerTool(
     'testcase_get',
@@ -43,7 +67,9 @@ export const registerTestCaseTools = (server: McpServer) => {
     'testcase_get_detail',
     {
       title: 'Get Test Case Detail',
-      description: 'Get test case with steps and custom fields',
+      description:
+        'Aggregated card: name, description, tags, custom fields, and step texts as a simple list. For the raw scenario graph (step actions + expected results per step from /step), use testcase_get_scenario or testcase_get_step instead — not this tool.',
+      annotations: { readOnlyHint: true },
       inputSchema: z.object({
         id: z.number().describe('Test case ID'),
       }),
@@ -68,25 +94,24 @@ export const registerTestCaseTools = (server: McpServer) => {
     'testcase_get_scenario',
     {
       title: 'Get Test Case Scenario',
-      description: 'Get scenario (steps and expected results) for a test case',
-      inputSchema: z.object({
-        id: z.number().describe('Test case ID'),
-      }),
+      description:
+        'Normalized scenario from GET /api/testcase/{id}/step (scenarioSteps, step bodies, expected results). For steps + expected results use this or testcase_get_step only — call by this exact name from tools/list.',
+      annotations: { readOnlyHint: true },
+      inputSchema: testCaseIdOnly,
     },
-    async (args: { id: number }) => {
-      const result = await getTestCaseScenario(args.id);
-      if (!isSuccess(result)) {
-        return {
-          content: [{ type: 'text', text: `Error: ${result.error.message}` }],
-          isError: true,
-        };
-      }
-      return {
-        content: [
-          { type: 'text', text: JSON.stringify(result.value, null, 2) },
-        ],
-      };
-    }
+    handleGetTestCaseScenario
+  );
+
+  server.registerTool(
+    'testcase_get_step',
+    {
+      title: 'Get Test Case Steps',
+      description:
+        'Same as testcase_get_scenario (alias). Use either name from tools/list for scenario JSON; do not invent variants (e.g. get_steps).',
+      annotations: { readOnlyHint: true },
+      inputSchema: testCaseIdOnly,
+    },
+    handleGetTestCaseScenario
   );
 
   server.registerTool(

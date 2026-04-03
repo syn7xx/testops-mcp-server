@@ -204,16 +204,20 @@ Then use `"command": "testops-mcp-server"` and `"args": ["--url", "...", "--toke
 
 ### Test Case
 
+Routing is defined in each tool’s **description** in `tools/list`. For step actions and expected results from `/api/testcase/{id}/step`, use **`testcase_get_scenario`** or **`testcase_get_step`** (same behavior).
+
 | Tool | Description |
 |------|-------------|
 | `testcase_get` | Get test case by ID |
-| `testcase_get_detail` | Get test case with steps and custom fields |
-| `testcase_get_scenario` | Get scenario (steps and expected results) |
+| `testcase_get_detail` | Summary with flattened step strings and custom fields (not raw scenario JSON) |
+| `testcase_get_scenario` | Scenario JSON: steps and expected results |
+| `testcase_get_step` | Same as `testcase_get_scenario` (alias for LLM-friendly naming) |
 | `testcase_update_step` | Update a step in scenario |
 | `testcase_set_scenario` | Replace all steps in scenario |
 | `testcase_get_custom_fields` | Get custom field values |
 | `testcase_update_custom_fields` | Update custom field values |
 | `testcase_search_by_aql` | Search test cases using AQL |
+| `testcase_list_in_tree` | List test cases in a project tree (`treeId`, optional `parentNodeId`) |
 
 ## Project Structure
 
