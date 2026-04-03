@@ -3,6 +3,7 @@ import { McpServer, StdioServerTransport } from '@modelcontextprotocol/server';
 import * as z from 'zod';
 import {
   registerProjectTools,
+  registerLaunchTools,
   registerTestPlanTools,
   registerTestCaseTools,
 } from './presentation/index.js';
@@ -27,6 +28,7 @@ export async function createTestOpsServer() {
   );
 
   registerProjectTools(server);
+  registerLaunchTools(server);
   registerTestPlanTools(server);
   registerTestCaseTools(server);
 

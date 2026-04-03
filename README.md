@@ -195,12 +195,21 @@ Then use `"command": "testops-mcp-server"` and `"args": ["--url", "...", "--toke
 | `project_find_by_name` | Find project by exact or partial name match |
 | `project_get_by_id` | Get project by ID |
 
+### Launch (test run)
+
+| Tool | Description |
+|------|-------------|
+| `launch_create` | Create a launch directly |
+| `launch_get_statistic` | Run summary: counts by status + progress `ready` |
+
 ### Test Plan
 
 | Tool | Description |
 |------|-------------|
 | `testplan_get` | Get test plan by ID |
 | `testplan_get_test_cases` | Get test cases from test plan with pagination |
+| `testplan_run` | Start a launch from a test plan |
+| `testplan_sync` | Sync test plan with source |
 
 ### Test Case
 
@@ -223,9 +232,9 @@ Routing is defined in each tool’s **description** in `tools/list`. For step ac
 
 ```
 src/
-├── shared/           # Utilities (Result, pagination, API client)
-├── domain/           # Business logic (project, test-plan, test-case)
-├── presentation/     # MCP tools
+├── shared/           # Utilities, DTO types
+├── domain/           # Business logic (project, launch, test-plan, test-case)
+├── presentation/     # MCP tools (project, launch, test-plan, test-case)
 ├── index.ts          # Entry point
 └── server.ts         # MCP server configuration
 ```

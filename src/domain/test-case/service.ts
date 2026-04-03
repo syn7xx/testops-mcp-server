@@ -191,7 +191,7 @@ export interface ListTestCasesInTreeParams extends PageParams {
 
 /**
  * List test cases under a project tree (v2 tree-node).
- * When `treeId` is set, TestOps scopes the result to that tree (see OpenAPI: test-case-tree-controller-v-2).
+ * When `treeId` is set, the backend scopes results to that tree.
  */
 export const listTestCasesInTree = async (
   projectId: number,

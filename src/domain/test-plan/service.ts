@@ -1,4 +1,4 @@
-import { apiGet } from '../../shared/api.js';
+import { apiGet, apiPost } from '../../shared/api.js';
 import { Result, map } from '../../shared/result.js';
 import { createPaginated } from '../../shared/pagination.js';
 import {
@@ -6,6 +6,10 @@ import {
   normalizePageParams,
   type Paginated,
 } from '../../shared/pagination.js';
+import type {
+  LaunchDto,
+  TestPlanRunRequestDto,
+} from '../../shared/openapi/launch-dto.js';
 import type { TestPlan, TestPlanTestCase } from './types.js';
 
 interface PageResponse<T> {
@@ -67,12 +71,22 @@ export const getTestPlanStat = async (
 };
 
 /**
- * Sync test plan (update test case list from source)
- * @param testPlanId - Test plan ID
- * @returns Updated test plan
+ * Sync test plan (update test case list from source).
+ * `POST /api/testplan/{id}/sync` → updated `TestPlanDto`
  */
 export const syncTestPlan = async (
   testPlanId: number
 ): Promise<Result<TestPlan, Error>> => {
-  return apiGet<TestPlan>(`/api/testplan/${testPlanId}/sync`);
+  return apiPost<TestPlan>(`/api/testplan/${testPlanId}/sync`);
+};
+
+/**
+ * Start a launch from a test plan.
+ * `POST /api/testplan/{id}/run` → `LaunchDto`.
+ */
+export const runTestPlan = async (
+  testPlanId: number,
+  body: TestPlanRunRequestDto
+): Promise<Result<LaunchDto, Error>> => {
+  return apiPost<LaunchDto>(`/api/testplan/${testPlanId}/run`, body);
 };

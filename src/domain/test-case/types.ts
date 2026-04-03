@@ -61,10 +61,10 @@ export interface PageTestCaseTreeNode {
   size?: number;
 }
 
-/** Group or leaf node; leaves expose `testCaseId` (see OpenAPI TestCaseTreeLeafDtoV2) */
+/** Group or leaf node; leaves include `testCaseId`. */
 export type TestCaseTreeNodeItem = Record<string, unknown>;
 
-/** Response of GET .../test-case/tree/tree-node (TestCaseFullTreeNodeDto) */
+/** Response of GET `.../test-case/tree/tree-node`. */
 export interface TestCaseFullTreeNode {
   id?: number;
   name?: string;

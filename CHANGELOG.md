@@ -7,6 +7,10 @@ On each release, [release-it](https://github.com/release-it/release-it) with `@r
 
 ## [Unreleased]
 
+### Added
+
+- MCP tool `launch_get_statistic`: `GET /api/launch/{id}/statistic` and `GET /api/launch/{id}/progress` (JSON `{ statistic, progress }`)
+
 ## [0.1.5] - 2026-04-03
 
 ### Added
