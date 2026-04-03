@@ -31,6 +31,7 @@
     "url": "https://github.com/syn7xx/testops-mcp-server.git"
   },
   "dependencies": {
+    "@cfworker/json-schema": "^4.1.1",
     "@modelcontextprotocol/server": "2.0.0-alpha.2",
     "zod": "^4.0.0"
   },

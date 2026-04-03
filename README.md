@@ -135,6 +135,23 @@ Add to `~/.opencode/mcp.json` or project `.opencode/mcp.json`:
   "mcpServers": {
     "testops": {
       "command": "npx",
+      "args": ["@syn7xx/testops-mcp-server"],
+      "env": {
+        "TESTOPS_URL": "https://your-testops.com",
+        "TESTOPS_TOKEN": "your-token"
+      }
+    }
+  }
+}
+```
+
+Or using command with inline arguments:
+
+```json
+{
+  "mcpServers": {
+    "testops": {
+      "command": "npx",
       "args": ["@syn7xx/testops-mcp-server", "--url", "https://your-testops.com", "--token", "your-token"]
     }
   }
