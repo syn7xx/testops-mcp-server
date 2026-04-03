@@ -41,9 +41,19 @@ export const getTestCaseDetail = async (
 
   const customFields = isSuccess(cfResult)
     ? cfResult.value.reduce<Record<string, string>>((acc, cf) => {
-        if (cf.values.length > 0) {
-          acc[cf.customField.name] = cf.values[0].name;
+        const values = cf.values;
+        const fieldName = cf.customField?.name;
+
+        if (!fieldName || !values?.length) {
+          return acc;
         }
+
+        const firstName = values[0]?.name;
+
+        if (firstName != null) {
+          acc[fieldName] = firstName;
+        }
+
         return acc;
       }, {})
     : {};
@@ -69,6 +79,7 @@ const extractStepsFromScenario = (
 
   for (const stepId of scenario.root.children) {
     const step = scenario.scenarioSteps[stepId];
+    
     if (step?.body) {
       steps.push(step.body);
     }
@@ -84,9 +95,8 @@ export const getTestCaseScenario = async (
   return apiGet<NormalizedScenarioDto>(`/api/testcase/${testCaseId}/step`);
 };
 
-/** Update one scenario step. */
+/** Update one scenario step by global step id. */
 export const updateScenarioStep = async (
-  testCaseId: number,
   stepId: number,
   data: { body?: string; expectedResult?: string }
 ): Promise<Result<NormalizedScenarioDto, Error>> => {

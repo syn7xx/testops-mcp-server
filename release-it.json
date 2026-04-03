@@ -8,6 +8,7 @@
     }
   },
   "hooks": {
+    "after:@release-it/conventional-changelog:beforeRelease": "git add CHANGELOG.md",
     "after:bump": "npm run build"
   },
   "npm": {
@@ -19,6 +20,12 @@
     "commitMessage": "release: v${version}",
     "tagName": "${version}",
     "tagAnnotation": "Release ${version}",
-    "push": true
+    "push": true,
+    "addUntrackedFiles": true,
+    "requireUpstream": false
+  },
+  "github": {
+    "release": true,
+    "releaseName": "Release ${version}"
   }
 }

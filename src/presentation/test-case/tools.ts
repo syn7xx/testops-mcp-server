@@ -119,21 +119,24 @@ export const registerTestCaseTools = (server: McpServer) => {
     'testcase_update_step',
     {
       title: 'Update Scenario Step',
-      description: 'Update a step in a test case scenario',
+      description:
+        'Update one scenario step by its step id from testcase_get_scenario; test case id is not used by the API.',
       inputSchema: z.object({
-        testCaseId: z.number().describe('Test case ID'),
-        stepId: z.number().describe('Step ID to update'),
+        stepId: z
+          .number()
+          .describe(
+            'Scenario step id (from normalized scenario / testcase_get_scenario)'
+          ),
         body: z.string().optional().describe('New step action'),
         expectedResult: z.string().optional().describe('New expected result'),
       }),
     },
     async (args: {
-      testCaseId: number;
       stepId: number;
       body?: string;
       expectedResult?: string;
     }) => {
-      const result = await updateScenarioStep(args.testCaseId, args.stepId, {
+      const result = await updateScenarioStep(args.stepId, {
         body: args.body,
         expectedResult: args.expectedResult,
       });

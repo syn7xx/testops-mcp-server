@@ -49,9 +49,10 @@ export interface CustomFieldValueDto {
   name: string;
 }
 
+/** CFV item: optional `customField` and `values` per OpenAPI CustomFieldWithValuesDto (no required keys). */
 export interface CustomFieldWithValuesDto {
-  customField: CustomFieldDto;
-  values: CustomFieldValueDto[];
+  customField?: CustomFieldDto;
+  values?: CustomFieldValueDto[];
 }
 
 /** One entry in `PageTestCaseTreeNodeDto.content` (group or leaf). */
