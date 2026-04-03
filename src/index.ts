@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 import { parseTestOpsServerArgs } from './args.js';
 import { initApiClient } from './shared/api.js';
 import { startServer } from './server.js';

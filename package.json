@@ -1,10 +1,13 @@
 {
   "name": "@syn7xx/testops-mcp-server",
-  "version": "0.1.0-alpha.2",
+  "version": "0.1.1",
   "description": "TestOps MCP Server - Model Context Protocol server for test operations",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "type": "module",
+  "files": [
+    "dist"
+  ],
   "bin": {
     "testops-mcp-server": "dist/index.js"
   },
