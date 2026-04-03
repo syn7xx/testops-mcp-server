@@ -1,13 +1,14 @@
 {
   "plugins": {
     "@release-it/conventional-changelog": {
-      "preset": "conventionalcommits",
+      "preset": {
+        "name": "conventionalcommits"
+      },
       "infile": "CHANGELOG.md"
     }
   },
   "hooks": {
-    "after:bump": "npm run build",
-    "before:git:release": "git add CHANGELOG.md"
+    "after:bump": "npm run build"
   },
   "npm": {
     "publish": true

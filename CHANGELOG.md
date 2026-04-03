@@ -7,6 +7,18 @@ On each release, [release-it](https://github.com/release-it/release-it) with `@r
 
 ## [Unreleased]
 
+## [0.1.5] - 2026-04-03
+
+### Added
+
+- MCP tool `testcase_list_in_tree` (GET `/api/v2/project/{projectId}/test-case/tree/tree-node` with `treeId`)
+- MCP tool `testcase_get_step` as an alias of `testcase_get_scenario` (steps + expected results from `/api/testcase/{id}/step`)
+
+### Changed
+
+- Clearer tool descriptions for scenario vs detail; README test-case table
+- Release tooling: `preset` for conventional-changelog as `{ "name": "conventionalcommits" }`; npm `overrides` for `conventional-changelog-conventionalcommits`
+
 ## [0.1.4] - 2026-04-03
 
 ### Added

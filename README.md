@@ -1,8 +1,8 @@
 # TestOps MCP Server
 
-Model Context Protocol server for TestOps 5.25
+[![npm](https://img.shields.io/npm/v/@syn7xx/testops-mcp-server.svg?logo=npm&label=npm)](https://www.npmjs.com/package/@syn7xx/testops-mcp-server)
 
-Package: `@syn7xx/testops-mcp-server`
+Model Context Protocol server for TestOps 5.25
 
 ## Installation
 
@@ -229,23 +229,6 @@ src/
 ├── index.ts          # Entry point
 └── server.ts         # MCP server configuration
 ```
-
-## Releasing
-
-Publishing to **npm** is only via the GitHub Actions workflow **Release** (`release-it`). The **CI** workflow only runs lint and build.
-
-**This workflow does not run on `git push`.** It is triggered **only** when someone opens **Actions → Release → Run workflow**, selects branch **`main`**, and chooses **patch** / **minor** / **major**. A plain merge or push to `main` will not start `release-it` (by design, so every commit does not bump the version).
-
-Steps:
-
-1. Repository secret **`NPM_TOKEN`** (npm token with publish access for `@syn7xx`).
-2. **Actions** tab → **Release** in the left list → **Run workflow** → branch **main** → run.
-
-That bumps `package.json`, updates **`CHANGELOG.md`** (from conventional commits since the last tag), creates a git tag, pushes to `main`, and runs **`npm publish`**. Use commit messages like `feat: ...`, `fix: ...`, `chore: ...` so the changelog has meaningful entries. Locally you can use `npm run release` (interactive) or `npm run release:patch` / `:minor` / `:major` instead.
-
-If you do not want a changelog at all, remove the `@release-it/conventional-changelog` plugin from `release-it.json` and delete `CHANGELOG.md`.
-
-If the **Release** workflow is missing in **Actions**, ensure `.github/workflows/release.yml` is on the **default branch** and that Actions are allowed in the repository **Settings → Actions → General**.
 
 ## License
 
