@@ -1,19 +1,19 @@
 /** Pagination request parameters */
 export interface PageParams {
-    page?: number;
-    size?: number;
-    sort?: string;
+  page?: number;
+  size?: number;
+  sort?: string;
 }
 
 /** Paginated response structure */
 export interface Paginated<T> {
-    items: T[];
-    page: number;
-    size: number;
-    totalElements: number;
-    totalPages: number;
-    hasNext: boolean;
-    hasPrevious: boolean;
+  items: T[];
+  page: number;
+  size: number;
+  totalElements: number;
+  totalPages: number;
+  hasNext: boolean;
+  hasPrevious: boolean;
 }
 
 /** Default pagination values */
@@ -26,10 +26,12 @@ export const MAX_SIZE = 100;
  * @param params - Optional pagination parameters
  * @returns Normalized params with enforced limits
  */
-export const normalizePageParams = (params?: PageParams): Required<PageParams> => ({
-    page: Math.max(0, params?.page ?? DEFAULT_PAGE),
-    size: Math.min(MAX_SIZE, Math.max(1, params?.size ?? DEFAULT_SIZE)),
-    sort: params?.sort ?? 'id,DESC',
+export const normalizePageParams = (
+  params?: PageParams
+): Required<PageParams> => ({
+  page: Math.max(0, params?.page ?? DEFAULT_PAGE),
+  size: Math.min(MAX_SIZE, Math.max(1, params?.size ?? DEFAULT_SIZE)),
+  sort: params?.sort ?? 'id,DESC',
 });
 
 /**
@@ -40,27 +42,31 @@ export const normalizePageParams = (params?: PageParams): Required<PageParams> =
  * @param totalElements - Total count (optional, inferred from items length)
  */
 export const createPaginated = <T>(
-    items: T[],
-    page: number,
-    size: number,
-    totalElements?: number,
+  items: T[],
+  page: number,
+  size: number,
+  totalElements?: number
 ): Paginated<T> => {
-    const total = totalElements ?? items.length;
-    const totalPages = Math.ceil(total / size);
+  const total = totalElements ?? items.length;
+  const totalPages = Math.ceil(total / size);
 
-    return {
-        items,
-        page,
-        size,
-        totalElements: total,
-        totalPages,
-        hasNext: page < totalPages - 1,
-        hasPrevious: page > 0,
-    };
+  return {
+    items,
+    page,
+    size,
+    totalElements: total,
+    totalPages,
+    hasNext: page < totalPages - 1,
+    hasPrevious: page > 0,
+  };
 };
 
 /** Client-side array pagination (fallback) */
-export const paginateArray = <T>(items: T[], page: number, size: number): T[] => {
-    const start = page * size;
-    return items.slice(start, start + size);
+export const paginateArray = <T>(
+  items: T[],
+  page: number,
+  size: number
+): T[] => {
+  const start = page * size;
+  return items.slice(start, start + size);
 };

@@ -1,14 +1,18 @@
 import { apiGet } from '../../shared/api.js';
 import { Result, map } from '../../shared/result.js';
 import { createPaginated } from '../../shared/pagination.js';
-import { PageParams, normalizePageParams, type Paginated } from '../../shared/pagination.js';
+import {
+  PageParams,
+  normalizePageParams,
+  type Paginated,
+} from '../../shared/pagination.js';
 import type { TestPlan, TestPlanTestCase } from './types.js';
 
 interface PageResponse<T> {
-    content?: T[];
-    totalElements?: number;
-    number?: number;
-    size?: number;
+  content?: T[];
+  totalElements?: number;
+  number?: number;
+  size?: number;
 }
 
 /**
@@ -16,8 +20,10 @@ interface PageResponse<T> {
  * @param id - Test plan ID
  * @returns Test plan details
  */
-export const getTestPlan = async (id: number): Promise<Result<TestPlan, Error>> => {
-    return apiGet<TestPlan>(`/api/testplan/${id}`);
+export const getTestPlan = async (
+  id: number
+): Promise<Result<TestPlan, Error>> => {
+  return apiGet<TestPlan>(`/api/testplan/${id}`);
 };
 
 /**
@@ -27,24 +33,24 @@ export const getTestPlan = async (id: number): Promise<Result<TestPlan, Error>> 
  * @returns Paginated list of test cases in the plan
  */
 export const getTestPlanTestCases = async (
-    testPlanId: number,
-    params?: PageParams,
+  testPlanId: number,
+  params?: PageParams
 ): Promise<Result<Paginated<TestPlanTestCase>, Error>> => {
-    const { page, size, sort } = normalizePageParams(params);
+  const { page, size, sort } = normalizePageParams(params);
 
-    const response = await apiGet<PageResponse<TestPlanTestCase>>(
-        `/api/testplan/${testPlanId}/tree/leaf`,
-        { page, size, sort: sort ?? 'name,ASC' },
-    );
+  const response = await apiGet<PageResponse<TestPlanTestCase>>(
+    `/api/testplan/${testPlanId}/tree/leaf`,
+    { page, size, sort: sort ?? 'name,ASC' }
+  );
 
-    return map(response, (data) =>
-        createPaginated(
-            data.content ?? [],
-            data.number ?? page,
-            data.size ?? size,
-            data.totalElements,
-        ),
-    );
+  return map(response, (data) =>
+    createPaginated(
+      data.content ?? [],
+      data.number ?? page,
+      data.size ?? size,
+      data.totalElements
+    )
+  );
 };
 
 /**
@@ -53,9 +59,11 @@ export const getTestPlanTestCases = async (
  * @returns Statistics (total, passed, failed counts)
  */
 export const getTestPlanStat = async (
-    testPlanId: number,
-): Promise<Result<{ total: number; passed: number; failed: number }, Error>> => {
-    return apiGet(`/api/testplan/${testPlanId}/stat`);
+  testPlanId: number
+): Promise<
+  Result<{ total: number; passed: number; failed: number }, Error>
+> => {
+  return apiGet(`/api/testplan/${testPlanId}/stat`);
 };
 
 /**
@@ -63,6 +71,8 @@ export const getTestPlanStat = async (
  * @param testPlanId - Test plan ID
  * @returns Updated test plan
  */
-export const syncTestPlan = async (testPlanId: number): Promise<Result<TestPlan, Error>> => {
-    return apiGet<TestPlan>(`/api/testplan/${testPlanId}/sync`);
+export const syncTestPlan = async (
+  testPlanId: number
+): Promise<Result<TestPlan, Error>> => {
+  return apiGet<TestPlan>(`/api/testplan/${testPlanId}/sync`);
 };

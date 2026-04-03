@@ -1,37 +1,83 @@
+import { parseArgs } from 'node:util';
+
 export type TestOpsServerArgs = {
   url: string;
   token: string;
 };
 
+const usage = `Usage: testops-mcp-server --url <BASE_URL> --token <API_TOKEN>
+       testops-mcp-server -u <BASE_URL> -t <API_TOKEN>
+       testops-mcp-server --url=<BASE> --token=<TOKEN>
+Environment: TESTOPS_URL, TESTOPS_TOKEN (used if CLI flags are omitted)
+CLI flags override environment variables when both are set.`;
+
+function printCliError(err: unknown): never {
+  const msg = err instanceof Error ? err.message : String(err);
+  console.error(msg);
+  console.error(usage);
+  process.exit(1);
+}
+
+function normalizeBaseUrl(raw: string): string {
+  const s = raw.trim();
+  let parsed: URL;
+  try {
+    parsed = new URL(s);
+  } catch {
+    console.error(
+      'Invalid --url / TESTOPS_URL: expected an absolute http(s) URL (e.g. https://testops.example.com)\n' +
+        usage
+    );
+    process.exit(1);
+  }
+  if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+    console.error(
+      'Invalid --url: only http: and https: are supported\n' + usage
+    );
+    process.exit(1);
+  }
+  return s.replace(/\/+$/, '');
+}
+
 /**
- * Parse process args: --url <base> --token <apitoken>
- * Or from env: TESTOPS_URL, TESTOPS_TOKEN
- * Base URL is stored without a trailing slash.
+ * Parse argv with `node:util` parseArgs (strict: unknown flags and positionals are rejected),
+ * then merge env TESTOPS_URL / TESTOPS_TOKEN. Base URL is trimmed and has trailing slashes removed.
  */
 export function parseTestOpsServerArgs(argv: string[]): TestOpsServerArgs {
-  // First check environment variables (for OpenCode and other MCP clients)
-  let url = process.env.TESTOPS_URL;
-  let token = process.env.TESTOPS_TOKEN;
-
-  // Override with CLI args if provided
-  const raw = argv.slice(2);
-  for (let i = 0; i < raw.length; i++) {
-    if (raw[i] === '--url' && raw[i + 1] !== undefined) {
-      url = raw[++i];
-    } else if (raw[i] === '--token' && raw[i + 1] !== undefined) {
-      token = raw[++i];
-    }
+  let values: { url?: string; token?: string; help?: boolean };
+  try {
+    ({ values } = parseArgs({
+      args: argv.slice(2),
+      options: {
+        url: { type: 'string', short: 'u' },
+        token: { type: 'string', short: 't' },
+        help: { type: 'boolean', short: 'h' },
+      },
+      allowPositionals: false,
+      strict: true,
+    }));
+  } catch (err) {
+    printCliError(err);
   }
 
-  if (!url?.trim() || !token?.trim()) {
+  if (values.help) {
+    console.log(usage);
+    process.exit(0);
+  }
+
+  const urlRaw = values.url ?? process.env.TESTOPS_URL;
+  const tokenRaw = values.token ?? process.env.TESTOPS_TOKEN;
+
+  if (!urlRaw?.trim() || !tokenRaw?.trim()) {
     console.error(
-      'Required: --url <TESTOPS_BASE_URL> --token <API_TOKEN>\nOr env: TESTOPS_URL, TESTOPS_TOKEN',
+      'Required: --url / -u and --token / -t (or env TESTOPS_URL, TESTOPS_TOKEN)\n\n' +
+        usage
     );
     process.exit(1);
   }
 
   return {
-    url: url.replace(/\/+$/, ''),
-    token: token.trim(),
+    url: normalizeBaseUrl(urlRaw),
+    token: tokenRaw.trim(),
   };
 }

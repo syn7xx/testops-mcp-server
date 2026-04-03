@@ -5,11 +5,18 @@
       "infile": "CHANGELOG.md"
     }
   },
+  "hooks": {
+    "after:bump": "npm run build"
+  },
   "npm": {
     "publish": true
   },
   "git": {
+    "requireBranch": "main",
+    "commit": true,
     "commitMessage": "release: v${version}",
-    "tagName": "v${version}"
+    "tagName": "v${version}",
+    "tagAnnotation": "Release v${version}",
+    "push": true
   }
 }

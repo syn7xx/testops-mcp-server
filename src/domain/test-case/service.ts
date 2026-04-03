@@ -1,13 +1,19 @@
 import { apiGet, apiPatch, apiPost } from '../../shared/api.js';
 import { Result, map, isSuccess, success } from '../../shared/result.js';
-import { PageParams, normalizePageParams, type Paginated } from '../../shared/pagination.js';
-import type { TestCase, TestCaseDetail, NormalizedScenario, CustomFieldWithValues, TestCaseSearchResult } from './types.js';
+import { PageParams, normalizePageParams } from '../../shared/pagination.js';
+import type {
+  TestCase,
+  TestCaseDetail,
+  NormalizedScenario,
+  CustomFieldWithValues,
+  TestCaseSearchResult,
+} from './types.js';
 
 interface PageResponse<T> {
-    content?: T[];
-    totalElements?: number;
-    number?: number;
-    size?: number;
+  content?: T[];
+  totalElements?: number;
+  number?: number;
+  size?: number;
 }
 
 /**
@@ -15,8 +21,10 @@ interface PageResponse<T> {
  * @param id - Test case ID
  * @returns Basic test case info
  */
-export const getTestCase = async (id: number): Promise<Result<TestCase, Error>> => {
-    return apiGet<TestCase>(`/api/testcase/${id}`);
+export const getTestCase = async (
+  id: number
+): Promise<Result<TestCase, Error>> => {
+  return apiGet<TestCase>(`/api/testcase/${id}`);
 };
 
 /**
@@ -25,59 +33,61 @@ export const getTestCase = async (id: number): Promise<Result<TestCase, Error>> 
  * @param id - Test case ID
  * @returns Full test case details
  */
-export const getTestCaseDetail = async (id: number): Promise<Result<TestCaseDetail, Error>> => {
-    const testCaseResult = await apiGet<TestCase>(`/api/testcase/${id}`);
+export const getTestCaseDetail = async (
+  id: number
+): Promise<Result<TestCaseDetail, Error>> => {
+  const testCaseResult = await apiGet<TestCase>(`/api/testcase/${id}`);
 
-    if (!isSuccess(testCaseResult)) {
-        return testCaseResult;
-    }
+  if (!isSuccess(testCaseResult)) {
+    return testCaseResult;
+  }
 
-    const testCase = testCaseResult.value;
+  const testCase = testCaseResult.value;
 
-    // Fetch additional data in parallel
-    const [scenarioResult, cfResult] = await Promise.all([
-        getTestCaseScenario(id),
-        getTestCaseCustomFields(id),
-    ]);
+  // Fetch additional data in parallel
+  const [scenarioResult, cfResult] = await Promise.all([
+    getTestCaseScenario(id),
+    getTestCaseCustomFields(id),
+  ]);
 
-    const steps = isSuccess(scenarioResult)
-        ? extractStepsFromScenario(scenarioResult.value)
-        : [];
+  const steps = isSuccess(scenarioResult)
+    ? extractStepsFromScenario(scenarioResult.value)
+    : [];
 
-    const customFields = isSuccess(cfResult)
-        ? cfResult.value.reduce<Record<string, string>>((acc, cf) => {
-            if (cf.values.length > 0) {
-                acc[cf.customField.name] = cf.values[0].name;
-            }
-            return acc;
-        }, {})
-        : {};
+  const customFields = isSuccess(cfResult)
+    ? cfResult.value.reduce<Record<string, string>>((acc, cf) => {
+        if (cf.values.length > 0) {
+          acc[cf.customField.name] = cf.values[0].name;
+        }
+        return acc;
+      }, {})
+    : {};
 
-    return success({
-        ...testCase,
-        steps,
-        customFields,
-        tags: testCase.tags?.map((t) => t.name) ?? [],
-        owner: testCase.createdBy ?? '',
-    });
+  return success({
+    ...testCase,
+    steps,
+    customFields,
+    tags: testCase.tags?.map((t) => t.name) ?? [],
+    owner: testCase.createdBy ?? '',
+  });
 };
 
 /** Extract step bodies from normalized scenario */
 const extractStepsFromScenario = (scenario: NormalizedScenario): string[] => {
-    const steps: string[] = [];
+  const steps: string[] = [];
 
-    if (!scenario.scenarioSteps || !scenario.root?.children) {
-        return steps;
-    }
-
-    for (const stepId of scenario.root.children) {
-        const step = scenario.scenarioSteps[stepId];
-        if (step?.body) {
-            steps.push(step.body);
-        }
-    }
-
+  if (!scenario.scenarioSteps || !scenario.root?.children) {
     return steps;
+  }
+
+  for (const stepId of scenario.root.children) {
+    const step = scenario.scenarioSteps[stepId];
+    if (step?.body) {
+      steps.push(step.body);
+    }
+  }
+
+  return steps;
 };
 
 /**
@@ -86,9 +96,9 @@ const extractStepsFromScenario = (scenario: NormalizedScenario): string[] => {
  * @returns Normalized scenario structure
  */
 export const getTestCaseScenario = async (
-    testCaseId: number,
+  testCaseId: number
 ): Promise<Result<NormalizedScenario, Error>> => {
-    return apiGet<NormalizedScenario>(`/api/testcase/${testCaseId}/step`);
+  return apiGet<NormalizedScenario>(`/api/testcase/${testCaseId}/step`);
 };
 
 /**
@@ -99,19 +109,18 @@ export const getTestCaseScenario = async (
  * @returns Updated scenario
  */
 export const updateScenarioStep = async (
-    testCaseId: number,
-    stepId: number,
-    data: { body?: string; expectedResult?: string },
+  testCaseId: number,
+  stepId: number,
+  data: { body?: string; expectedResult?: string }
 ): Promise<Result<NormalizedScenario, Error>> => {
-    const body: Record<string, unknown> = {};
-    if (data.body !== undefined) body.body = data.body;
-    if (data.expectedResult !== undefined) body.expectedResult = data.expectedResult;
+  const body: Record<string, unknown> = {};
+  if (data.body !== undefined) body.body = data.body;
+  if (data.expectedResult !== undefined)
+    body.expectedResult = data.expectedResult;
 
-    return apiPatch<NormalizedScenario>(
-        `/api/testcase/step/${stepId}`,
-        body,
-        { withExpectedResult: true },
-    );
+  return apiPatch<NormalizedScenario>(`/api/testcase/step/${stepId}`, body, {
+    withExpectedResult: true,
+  });
 };
 
 /**
@@ -121,20 +130,20 @@ export const updateScenarioStep = async (
  * @returns Updated scenario
  */
 export const setTestCaseScenario = async (
-    testCaseId: number,
-    steps: Array<{ action: string; expectedResult?: string }>,
+  testCaseId: number,
+  steps: Array<{ action: string; expectedResult?: string }>
 ): Promise<Result<NormalizedScenario, Error>> => {
-    const scenarioData = {
-        steps: steps.map((s) => ({
-            action: s.action,
-            expectedResult: s.expectedResult ?? '',
-        })),
-    };
+  const scenarioData = {
+    steps: steps.map((s) => ({
+      action: s.action,
+      expectedResult: s.expectedResult ?? '',
+    })),
+  };
 
-    return apiPost<NormalizedScenario>(
-        `/api/testcase/${testCaseId}/scenario`,
-        scenarioData,
-    );
+  return apiPost<NormalizedScenario>(
+    `/api/testcase/${testCaseId}/scenario`,
+    scenarioData
+  );
 };
 
 /**
@@ -143,9 +152,9 @@ export const setTestCaseScenario = async (
  * @returns Custom fields with their values
  */
 export const getTestCaseCustomFields = async (
-    testCaseId: number,
+  testCaseId: number
 ): Promise<Result<CustomFieldWithValues[], Error>> => {
-    return apiGet<CustomFieldWithValues[]>(`/api/testcase/${testCaseId}/cfv`);
+  return apiGet<CustomFieldWithValues[]>(`/api/testcase/${testCaseId}/cfv`);
 };
 
 /**
@@ -154,11 +163,14 @@ export const getTestCaseCustomFields = async (
  * @param fields - Array of custom field updates (fieldId + valueIds)
  */
 export const updateTestCaseCustomFields = async (
-    testCaseId: number,
-    fields: Array<{ customFieldId: number; valueIds: number[] }>,
+  testCaseId: number,
+  fields: Array<{ customFieldId: number; valueIds: number[] }>
 ): Promise<Result<void, Error>> => {
-    const result = await apiPatch<void>(`/api/testcase/${testCaseId}/cfv`, fields);
-    return map(result, () => undefined);
+  const result = await apiPatch<void>(
+    `/api/testcase/${testCaseId}/cfv`,
+    fields
+  );
+  return map(result, () => undefined);
 };
 
 /**
@@ -169,28 +181,28 @@ export const updateTestCaseCustomFields = async (
  * @returns Search results with pagination info
  */
 export const searchTestCasesByAQL = async (
-    projectId: number,
-    rql: string,
-    params?: PageParams & { deleted?: boolean },
+  projectId: number,
+  rql: string,
+  params?: PageParams & { deleted?: boolean }
 ): Promise<Result<TestCaseSearchResult, Error>> => {
-    const { page, size, sort } = normalizePageParams(params);
+  const { page, size, sort } = normalizePageParams(params);
 
-    const response = await apiGet<PageResponse<TestCase>>(
-        '/api/testcase/__search',
-        {
-            projectId,
-            rql,
-            deleted: params?.deleted,
-            page,
-            size,
-            sort,
-        },
-    );
+  const response = await apiGet<PageResponse<TestCase>>(
+    '/api/testcase/__search',
+    {
+      projectId,
+      rql,
+      deleted: params?.deleted,
+      page,
+      size,
+      sort,
+    }
+  );
 
-    return map(response, (data) => ({
-        testCases: data.content ?? [],
-        total: data.totalElements ?? 0,
-        page: data.number ?? page,
-        size: data.size ?? size,
-    }));
+  return map(response, (data) => ({
+    testCases: data.content ?? [],
+    total: data.totalElements ?? 0,
+    page: data.number ?? page,
+    size: data.size ?? size,
+  }));
 };

@@ -1,22 +1,28 @@
+import { createRequire } from 'node:module';
 import { McpServer, StdioServerTransport } from '@modelcontextprotocol/server';
 import * as z from 'zod';
 import {
-    registerProjectTools,
-    registerTestPlanTools,
-    registerTestCaseTools,
+  registerProjectTools,
+  registerTestPlanTools,
+  registerTestCaseTools,
 } from './presentation/index.js';
+
+const require = createRequire(import.meta.url);
+const { version: packageVersion } = require('../package.json') as {
+  version: string;
+};
 
 export async function createTestOpsServer() {
   const server = new McpServer(
     {
       name: 'testops-mcp-server',
-      version: '0.1.0'
+      version: packageVersion,
     },
     {
       capabilities: {
         resources: {},
-        tools: {}
-      }
+        tools: {},
+      },
     }
   );
 
@@ -29,10 +35,10 @@ export async function createTestOpsServer() {
     {
       title: 'Ping',
       description: 'Test tool to verify server connectivity',
-      inputSchema: z.object({})
+      inputSchema: z.object({}),
     },
     async () => ({
-      content: [{ type: 'text', text: 'Pong! Server is running.' }]
+      content: [{ type: 'text', text: 'Pong! Server is running.' }],
     })
   );
 
