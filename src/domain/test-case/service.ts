@@ -79,7 +79,6 @@ const extractStepsFromScenario = (
 
   for (const stepId of scenario.root.children) {
     const step = scenario.scenarioSteps[stepId];
-    
     if (step?.body) {
       steps.push(step.body);
     }
