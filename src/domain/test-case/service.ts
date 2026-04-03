@@ -7,6 +7,7 @@ import type {
   NormalizedScenario,
   CustomFieldWithValues,
   TestCaseSearchResult,
+  TestCaseFullTreeNode,
 } from './types.js';
 
 interface PageResponse<T> {
@@ -180,6 +181,44 @@ export const updateTestCaseCustomFields = async (
  * @param params - Pagination and options
  * @returns Search results with pagination info
  */
+export interface ListTestCasesInTreeParams extends PageParams {
+  parentNodeId?: number;
+  search?: string;
+  filterId?: number;
+  query?: string;
+  baseAql?: string;
+}
+
+/**
+ * List test cases under a project tree (v2 tree-node).
+ * When `treeId` is set, TestOps scopes the result to that tree (see OpenAPI: test-case-tree-controller-v-2).
+ */
+export const listTestCasesInTree = async (
+  projectId: number,
+  treeId: number,
+  params?: ListTestCasesInTreeParams
+): Promise<Result<TestCaseFullTreeNode, Error>> => {
+  const { page, size, sort } = normalizePageParams({
+    ...params,
+    sort: params?.sort ?? 'name,ASC',
+  });
+
+  return apiGet<TestCaseFullTreeNode>(
+    `/api/v2/project/${projectId}/test-case/tree/tree-node`,
+    {
+      treeId,
+      parentNodeId: params?.parentNodeId,
+      search: params?.search,
+      filterId: params?.filterId,
+      page,
+      size,
+      sort,
+      query: params?.query,
+      baseAql: params?.baseAql,
+    }
+  );
+};
+
 export const searchTestCasesByAQL = async (
   projectId: number,
   rql: string,

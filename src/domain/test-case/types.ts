@@ -52,3 +52,23 @@ export interface TestCaseSearchResult {
   page: number;
   size: number;
 }
+
+/** Page of tree nodes (groups and leaves) from v2 tree-node API */
+export interface PageTestCaseTreeNode {
+  content?: TestCaseTreeNodeItem[];
+  totalElements?: number;
+  number?: number;
+  size?: number;
+}
+
+/** Group or leaf node; leaves expose `testCaseId` (see OpenAPI TestCaseTreeLeafDtoV2) */
+export type TestCaseTreeNodeItem = Record<string, unknown>;
+
+/** Response of GET .../test-case/tree/tree-node (TestCaseFullTreeNodeDto) */
+export interface TestCaseFullTreeNode {
+  id?: number;
+  name?: string;
+  parentNodeId?: number;
+  customFieldValueId?: number;
+  children?: PageTestCaseTreeNode;
+}

@@ -10,6 +10,7 @@ import {
   getTestCaseCustomFields,
   updateTestCaseCustomFields,
   searchTestCasesByAQL,
+  listTestCasesInTree,
 } from '../../domain/test-case/index.js';
 
 export const registerTestCaseTools = (server: McpServer) => {
@@ -215,6 +216,62 @@ export const registerTestCaseTools = (server: McpServer) => {
       }
       return {
         content: [{ type: 'text', text: 'Custom fields updated successfully' }],
+      };
+    }
+  );
+
+  server.registerTool(
+    'testcase_list_in_tree',
+    {
+      title: 'List Test Cases in Tree',
+      description:
+        'List test cases for a project tree (Allure TestOps GET /api/v2/project/{projectId}/test-case/tree/tree-node). Requires treeId. Returns a tree node with paginated children; leaf nodes include testCaseId. Use parentNodeId to page into a folder.',
+      inputSchema: z.object({
+        projectId: z.number().describe('Project ID'),
+        treeId: z.number().describe('Test case tree ID'),
+        parentNodeId: z
+          .number()
+          .optional()
+          .describe('Parent folder node ID (omit for tree root)'),
+        search: z.string().optional().describe('Search filter'),
+        filterId: z.number().optional().describe('Saved filter ID'),
+        query: z.string().optional().describe('Query string (API `query`)'),
+        baseAql: z
+          .string()
+          .optional()
+          .describe('Base AQL applied on the server'),
+        page: z.number().optional().describe('Page index (0-based)'),
+        size: z.number().optional().describe('Page size'),
+        sort: z.string().optional().describe('Sort, e.g. name,ASC'),
+      }),
+    },
+    async (args: {
+      projectId: number;
+      treeId: number;
+      parentNodeId?: number;
+      search?: string;
+      filterId?: number;
+      query?: string;
+      baseAql?: string;
+      page?: number;
+      size?: number;
+      sort?: string;
+    }) => {
+      const result = await listTestCasesInTree(
+        args.projectId,
+        args.treeId,
+        args
+      );
+      if (!isSuccess(result)) {
+        return {
+          content: [{ type: 'text', text: `Error: ${result.error.message}` }],
+          isError: true,
+        };
+      }
+      return {
+        content: [
+          { type: 'text', text: JSON.stringify(result.value, null, 2) },
+        ],
       };
     }
   );
