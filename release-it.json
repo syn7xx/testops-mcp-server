@@ -6,7 +6,8 @@
     }
   },
   "hooks": {
-    "after:bump": "npm run build"
+    "after:bump": "npm run build",
+    "before:git:release": "git add CHANGELOG.md"
   },
   "npm": {
     "publish": true
@@ -15,8 +16,8 @@
     "requireBranch": "main",
     "commit": true,
     "commitMessage": "release: v${version}",
-    "tagName": "v${version}",
-    "tagAnnotation": "Release v${version}",
+    "tagName": "${version}",
+    "tagAnnotation": "Release ${version}",
     "push": true
   }
 }

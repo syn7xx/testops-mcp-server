@@ -7,6 +7,16 @@ On each release, [release-it](https://github.com/release-it/release-it) with `@r
 
 ## [Unreleased]
 
+## [0.1.4] - 2026-04-03
+
+### Added
+
+- `prepublishOnly` runs `npm run build` before every `npm publish` (CI and local)
+
+### Changed
+
+- Ship `CHANGELOG.md` in the npm package (`files`); expand README **Releasing** (conventional commits, manual workflow)
+
 ## [0.1.3] - 2026-04-03
 
 ### Added
