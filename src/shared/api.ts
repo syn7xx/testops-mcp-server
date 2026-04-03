@@ -1,13 +1,18 @@
 import type { Result } from './result.js';
 import { tryCatch } from './result.js';
 
-/** HTTP methods supported by the API client */
-export type HttpMethod = 'GET' | 'POST' | 'PATCH' | 'DELETE';
+type HttpMethod = 'GET' | 'POST' | 'PATCH' | 'DELETE';
 
-/** Request configuration for API calls */
-export interface RequestConfig {
+type QueryParamValue =
+  | string
+  | number
+  | boolean
+  | undefined
+  | ReadonlyArray<string | number | boolean>;
+
+interface RequestConfig {
   method: HttpMethod;
-  queryParams?: Record<string, string | number | boolean | undefined>;
+  queryParams?: Record<string, QueryParamValue>;
   body?: unknown;
   headers?: Record<string, string>;
 }
@@ -15,11 +20,7 @@ export interface RequestConfig {
 let baseUrl = '';
 let authToken = '';
 
-/**
- * Initialize the API client with TestOps credentials
- * @param url - TestOps instance URL
- * @param token - API token for authentication
- */
+/** Configure base URL and API token. */
 export const initApiClient = (url: string, token: string): void => {
   baseUrl = url.replace(/\/+$/, '');
   authToken = token;
@@ -34,15 +35,12 @@ const getConfig = (): { baseUrl: string; authToken: string } => {
 
 let jwtToken: string | null = null;
 
-/** Clear cached JWT token (useful for re-authentication) */
+/** Clear cached JWT. */
 export const clearJwtCache = (): void => {
   jwtToken = null;
 };
 
-/**
- * Get JWT token for API requests (with caching)
- * @returns Cached or freshly obtained JWT token
- */
+/** Obtain JWT for bearer auth (cached). */
 export const getJwt = async (): Promise<string> => {
   if (jwtToken) {
     return jwtToken;
@@ -83,7 +81,14 @@ async function executeRequest<T>(
   const url = new URL(`${root}${endpoint}`);
   if (config.queryParams) {
     Object.entries(config.queryParams).forEach(([key, value]) => {
-      if (value !== undefined) {
+      if (value === undefined) {
+        return;
+      }
+      if (Array.isArray(value)) {
+        for (const item of value) {
+          url.searchParams.append(key, String(item));
+        }
+      } else {
         url.searchParams.set(key, String(value));
       }
     });
@@ -114,10 +119,7 @@ async function executeRequest<T>(
   return response.json() as Promise<T>;
 }
 
-/**
- * Base HTTP client with automatic JWT auth.
- * On HTTP 401, clears the cached JWT and retries the request once (e.g. expired access token).
- */
+/** Send JSON request with JWT and one 401 retry. */
 export const apiFetch = async <T = unknown>(
   endpoint: string,
   config: RequestConfig
@@ -125,14 +127,14 @@ export const apiFetch = async <T = unknown>(
   return tryCatch(async () => executeRequest<T>(endpoint, config, true));
 };
 
-/** GET request helper */
+/** Send GET and return Result. */
 export const apiGet = <T = unknown>(
   endpoint: string,
   queryParams?: RequestConfig['queryParams']
 ): Promise<Result<T, Error>> =>
   apiFetch<T>(endpoint, { method: 'GET', queryParams });
 
-/** POST request helper */
+/** Send POST and return Result. */
 export const apiPost = <T = unknown>(
   endpoint: string,
   body?: unknown,
@@ -140,17 +142,10 @@ export const apiPost = <T = unknown>(
 ): Promise<Result<T, Error>> =>
   apiFetch<T>(endpoint, { method: 'POST', body, queryParams });
 
-/** PATCH request helper */
+/** Send PATCH and return Result. */
 export const apiPatch = <T = unknown>(
   endpoint: string,
   body?: unknown,
   queryParams?: RequestConfig['queryParams']
 ): Promise<Result<T, Error>> =>
   apiFetch<T>(endpoint, { method: 'PATCH', body, queryParams });
-
-/** DELETE request helper */
-export const apiDelete = <T = unknown>(
-  endpoint: string,
-  queryParams?: RequestConfig['queryParams']
-): Promise<Result<T, Error>> =>
-  apiFetch<T>(endpoint, { method: 'DELETE', queryParams });

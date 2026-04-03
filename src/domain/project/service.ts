@@ -1,31 +1,24 @@
-import { apiGet } from '../../shared/api.js';
-import { Result, map } from '../../shared/result.js';
+import { apiGet } from '@shared/api.js';
+import type { PageDto } from '@shared/openapi/common-dto.js';
+import type {
+  ProjectDto,
+  ProjectSuggestionDto,
+} from '@shared/openapi/project-dto.js';
 import {
+  createPaginated,
   PageParams,
   normalizePageParams,
-  createPaginated,
   type Paginated,
-} from '../../shared/pagination.js';
-import type { Project, ProjectSuggestion } from './types.js';
+} from '@shared/pagination.js';
+import { Result, map } from '@shared/result.js';
 
-interface PageResponse<T> {
-  content?: T[];
-  totalElements?: number;
-  number?: number;
-  size?: number;
-}
-
-/**
- * Find all projects with pagination
- * @param params - Pagination parameters (page, size, sort)
- * @returns Paginated list of projects
- */
+/** Find projects with pagination. */
 export const findProjects = async (
   params?: PageParams
-): Promise<Result<Paginated<Project>, Error>> => {
+): Promise<Result<Paginated<ProjectDto>, Error>> => {
   const { page, size, sort } = normalizePageParams(params);
 
-  const response = await apiGet<PageResponse<Project>>('/api/project', {
+  const response = await apiGet<PageDto<ProjectDto>>('/api/project', {
     page,
     size,
     sort,
@@ -41,16 +34,11 @@ export const findProjects = async (
   );
 };
 
-/**
- * Find a project by name using suggest API
- * Tries exact match first, then partial match
- * @param name - Project name to search
- * @returns Project if found, null otherwise
- */
+/** Find a project by name via suggest (exact match, then partial). */
 export const findProjectByName = async (
   name: string
-): Promise<Result<Project | null, Error>> => {
-  const response = await apiGet<PageResponse<ProjectSuggestion>>(
+): Promise<Result<ProjectDto | null, Error>> => {
+  const response = await apiGet<PageDto<ProjectSuggestionDto>>(
     '/api/project/suggest',
     {
       query: name,
@@ -76,14 +64,9 @@ export const findProjectByName = async (
   });
 };
 
-/**
- * Get a single project by ID
- * @param id - Project ID
- * @returns Project details
- */
+/** Get a project by ID. */
 export const getProjectById = async (
   id: number
-): Promise<Result<Project, Error>> => {
-  const response = await apiGet<Project>(`/api/project/${id}`);
-  return map(response, (project) => project);
+): Promise<Result<ProjectDto, Error>> => {
+  return apiGet<ProjectDto>(`/api/project/${id}`);
 };

@@ -1,11 +1,11 @@
-/** Pagination request parameters */
+/** Page index, size, and sort for list requests. */
 export interface PageParams {
   page?: number;
   size?: number;
   sort?: string;
 }
 
-/** Paginated response structure */
+/** Client-side page of items with totals. */
 export interface Paginated<T> {
   items: T[];
   page: number;
@@ -16,16 +16,11 @@ export interface Paginated<T> {
   hasPrevious: boolean;
 }
 
-/** Default pagination values */
-export const DEFAULT_PAGE = 0;
-export const DEFAULT_SIZE = 50;
-export const MAX_SIZE = 100;
+const DEFAULT_PAGE = 0;
+const DEFAULT_SIZE = 50;
+const MAX_SIZE = 100;
 
-/**
- * Normalizes pagination params with defaults and limits
- * @param params - Optional pagination parameters
- * @returns Normalized params with enforced limits
- */
+/** Normalize page, size, and sort with bounds. */
 export const normalizePageParams = (
   params?: PageParams
 ): Required<PageParams> => ({
@@ -34,13 +29,7 @@ export const normalizePageParams = (
   sort: params?.sort ?? 'id,DESC',
 });
 
-/**
- * Creates a Paginated response from API data
- * @param items - Array of items for current page
- * @param page - Current page number
- * @param size - Page size
- * @param totalElements - Total count (optional, inferred from items length)
- */
+/** Build paginated view from a slice and total count. */
 export const createPaginated = <T>(
   items: T[],
   page: number,
@@ -59,14 +48,4 @@ export const createPaginated = <T>(
     hasNext: page < totalPages - 1,
     hasPrevious: page > 0,
   };
-};
-
-/** Client-side array pagination (fallback) */
-export const paginateArray = <T>(
-  items: T[],
-  page: number,
-  size: number
-): T[] => {
-  const start = page * size;
-  return items.slice(start, start + size);
 };

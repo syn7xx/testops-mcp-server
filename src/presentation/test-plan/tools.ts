@@ -1,20 +1,21 @@
 import type { McpServer } from '@modelcontextprotocol/server';
 import * as z from 'zod';
-import type { TestPlanRunRequestDto } from '../../shared/openapi/launch-dto.js';
-import { omitUndefined } from '../../shared/record-utils.js';
-import { isSuccess } from '../../shared/result.js';
+import type { TestPlanRunRequestDto } from '@shared/openapi/launch-dto.js';
+import { omitUndefined } from '@shared/record-utils.js';
+import { isSuccess } from '@shared/result.js';
 import {
   getTestPlan,
   getTestPlanTestCases,
   runTestPlan,
   syncTestPlan,
-} from '../../domain/test-plan/index.js';
+} from '@domain/test-plan/index.js';
 
 const launchTagSchema = z.object({
   id: z.number().optional(),
   name: z.string().optional(),
 });
 
+/** Register test plan MCP tools. */
 export const registerTestPlanTools = (server: McpServer) => {
   server.registerTool(
     'testplan_get',
@@ -96,7 +97,7 @@ export const registerTestPlanTools = (server: McpServer) => {
     {
       title: 'Run Test Plan',
       description:
-        'Create a launch from a test plan. POST /api/testplan/{id}/run; body needs launchName.',
+        'Create a launch from a test plan. Body requires launchName.',
       inputSchema: z.object({
         id: z.number().describe('Test plan ID'),
         launchName: z

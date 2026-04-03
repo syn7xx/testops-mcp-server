@@ -1,15 +1,6 @@
-/**
- * TestCase Domain - Types
- */
+import type { TestCaseDto } from '@shared/openapi/test-case-dto.js';
 
-export interface TestCase {
-  id: number;
-  name: string;
-  description?: string;
-  createdBy?: string;
-  tags?: Array<{ name: string }>;
-}
-
+/** Aggregated detail built from multiple endpoints (not a single API DTO). */
 export interface TestCaseDetail {
   id: number;
   name: string;
@@ -21,54 +12,10 @@ export interface TestCaseDetail {
   owner: string;
 }
 
-export interface ScenarioStep {
-  id: number;
-  body?: string;
-  children?: number[];
-  expectedResultId?: number;
-}
-
-export interface NormalizedScenario {
-  scenarioSteps: Record<number, ScenarioStep>;
-  root: {
-    children: number[];
-  };
-}
-
-export interface CustomFieldWithValues {
-  customField: {
-    id: number;
-    name: string;
-  };
-  values: Array<{
-    id: number;
-    name: string;
-  }>;
-}
-
+/** AQL search page with test cases and totals. */
 export interface TestCaseSearchResult {
-  testCases: TestCase[];
+  testCases: TestCaseDto[];
   total: number;
   page: number;
   size: number;
-}
-
-/** Page of tree nodes (groups and leaves) from v2 tree-node API */
-export interface PageTestCaseTreeNode {
-  content?: TestCaseTreeNodeItem[];
-  totalElements?: number;
-  number?: number;
-  size?: number;
-}
-
-/** Group or leaf node; leaves include `testCaseId`. */
-export type TestCaseTreeNodeItem = Record<string, unknown>;
-
-/** Response of GET `.../test-case/tree/tree-node`. */
-export interface TestCaseFullTreeNode {
-  id?: number;
-  name?: string;
-  parentNodeId?: number;
-  customFieldValueId?: number;
-  children?: PageTestCaseTreeNode;
 }

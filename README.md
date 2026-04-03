@@ -201,6 +201,7 @@ Then use `"command": "testops-mcp-server"` and `"args": ["--url", "...", "--toke
 |------|-------------|
 | `launch_create` | Create a launch directly |
 | `launch_get_statistic` | Run summary: counts by status + progress `ready` |
+| `launch_list_test_results` | Flat paginated test results for a launch (`sort` can be a string or array for multiple sort params) |
 
 ### Test Plan
 
@@ -213,7 +214,7 @@ Then use `"command": "testops-mcp-server"` and `"args": ["--url", "...", "--toke
 
 ### Test Case
 
-Routing is defined in each tool’s **description** in `tools/list`. For step actions and expected results from `/api/testcase/{id}/step`, use **`testcase_get_scenario`** or **`testcase_get_step`** (same behavior).
+Routing is defined in each tool’s **description** in `tools/list`. For step actions and expected results as scenario JSON, use **`testcase_get_scenario`** or **`testcase_get_step`** (same behavior).
 
 | Tool | Description |
 |------|-------------|
@@ -232,7 +233,8 @@ Routing is defined in each tool’s **description** in `tools/list`. For step ac
 
 ```
 src/
-├── shared/           # Utilities, DTO types
+├── shared/openapi/   # HTTP DTOs (`common-dto`, `project-dto`, `test-plan-dto`, `test-case-dto`, `launch-dto`, `launch-test-result-dto`)
+├── shared/           # Utilities, API client, pagination
 ├── domain/           # Business logic (project, launch, test-plan, test-case)
 ├── presentation/     # MCP tools (project, launch, test-plan, test-case)
 ├── index.ts          # Entry point

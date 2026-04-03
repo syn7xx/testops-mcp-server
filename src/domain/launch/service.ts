@@ -1,35 +1,68 @@
-import { apiGet, apiPost } from '../../shared/api.js';
-import type { Result } from '../../shared/result.js';
+import { apiGet, apiPost } from '@shared/api.js';
 import type {
   LaunchCreateDto,
   LaunchDto,
   LaunchProgressDto,
   TestStatusCountDto,
-} from '../../shared/openapi/launch-dto.js';
+} from '@shared/openapi/launch-dto.js';
+import type { PageTestResultFlatDto } from '@shared/openapi/launch-test-result-dto.js';
+import { normalizePageParams, type PageParams } from '@shared/pagination.js';
+import type { Result } from '@shared/result.js';
 
-/**
- * Create a launch (`POST /api/launch`).
- */
+export interface LaunchTestResultsFlatParams extends Omit<PageParams, 'sort'> {
+  /** One or more sort criteria (repeated query keys). */
+  sort?: string | ReadonlyArray<string>;
+  search?: string;
+  filterId?: number;
+}
+
+/** Create a launch. */
 export const createLaunch = async (
   body: LaunchCreateDto
 ): Promise<Result<LaunchDto, Error>> => {
   return apiPost<LaunchDto>('/api/launch', body);
 };
 
-/**
- * Aggregated test result counts by status for a launch (`GET /api/launch/{id}/statistic`).
- */
+/** Aggregated test result counts by status for a launch. */
 export const getLaunchStatistic = async (
   launchId: number
 ): Promise<Result<TestStatusCountDto[], Error>> => {
   return apiGet<TestStatusCountDto[]>(`/api/launch/${launchId}/statistic`);
 };
 
-/**
- * Progress widget data for a launch (`GET /api/launch/{id}/progress`).
- */
+/** Progress widget data for a launch. */
 export const getLaunchProgress = async (
   launchId: number
 ): Promise<Result<LaunchProgressDto, Error>> => {
   return apiGet<LaunchProgressDto>(`/api/launch/${launchId}/progress`);
+};
+
+/** Paged flat list of test results for a launch. */
+export const getLaunchTestResultsFlat = async (
+  launchId: number,
+  params?: LaunchTestResultsFlatParams
+): Promise<Result<PageTestResultFlatDto, Error>> => {
+  const { page, size } = normalizePageParams({
+    page: params?.page,
+    size: params?.size,
+  });
+  const sort =
+    params?.sort === undefined
+      ? 'name,ASC'
+      : Array.isArray(params.sort)
+        ? params.sort.length > 0
+          ? params.sort
+          : 'name,ASC'
+        : params.sort;
+
+  return apiGet<PageTestResultFlatDto>(
+    `/api/v2/launch/${launchId}/test-result/flat`,
+    {
+      search: params?.search,
+      filterId: params?.filterId,
+      page,
+      size,
+      sort,
+    }
+  );
 };

@@ -1,12 +1,13 @@
 import type { McpServer } from '@modelcontextprotocol/server';
 import * as z from 'zod';
-import { isSuccess } from '../../shared/result.js';
+import { isSuccess } from '@shared/result.js';
 import {
   findProjects,
   findProjectByName,
   getProjectById,
-} from '../../domain/project/index.js';
+} from '@domain/project/index.js';
 
+/** Register project MCP tools. */
 export const registerProjectTools = (server: McpServer) => {
   server.registerTool(
     'project_list',

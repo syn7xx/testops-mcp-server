@@ -6,13 +6,14 @@ import {
   registerLaunchTools,
   registerTestPlanTools,
   registerTestCaseTools,
-} from './presentation/index.js';
+} from '@presentation/index.js';
 
 const require = createRequire(import.meta.url);
 const { version: packageVersion } = require('../package.json') as {
   version: string;
 };
 
+/** Create MCP server with TestOps tools registered. */
 export async function createTestOpsServer() {
   const server = new McpServer(
     {
@@ -47,6 +48,7 @@ export async function createTestOpsServer() {
   return server;
 }
 
+/** Connect MCP server to stdio and run. */
 export async function startServer() {
   const server = await createTestOpsServer();
   const transport = new StdioServerTransport();

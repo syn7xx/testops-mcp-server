@@ -9,14 +9,23 @@ On each release, [release-it](https://github.com/release-it/release-it) with `@r
 
 ### Added
 
-- MCP tool `launch_get_statistic`: `GET /api/launch/{id}/statistic` and `GET /api/launch/{id}/progress` (JSON `{ statistic, progress }`)
+- MCP tool `launch_get_statistic` (aggregated counts by status + progress `ready` as JSON)
+- MCP tool `launch_list_test_results` (flat paginated test results for a launch)
+- HTTP client: query params may be arrays (repeated keys, e.g. multiple `sort`) without changing scalar usage
+- Shared HTTP DTO modules: `common-dto`, `project-dto`, `test-plan-dto`, `test-case-dto` (aligned with `launch-dto`)
+- TypeScript path aliases `@shared/*`, `@domain/*`, `@presentation/*`; `npm run build` runs `tsc-alias` so `dist/` keeps relative imports for Node
+
+### Changed
+
+- `getTestPlanStat` return type is now `TestPlanStatDto` (aligned with TestOps test-plan stat payload)
+- Domain modules no longer re-export OpenAPI DTOs; import `@shared/openapi/*-dto` (or use `*Dto` return types from services) instead
 
 ## [0.1.5] - 2026-04-03
 
 ### Added
 
-- MCP tool `testcase_list_in_tree` (GET `/api/v2/project/{projectId}/test-case/tree/tree-node` with `treeId`)
-- MCP tool `testcase_get_step` as an alias of `testcase_get_scenario` (steps + expected results from `/api/testcase/{id}/step`)
+- MCP tool `testcase_list_in_tree` (project tree node listing with `treeId`)
+- MCP tool `testcase_get_step` as an alias of `testcase_get_scenario` (steps and expected results)
 
 ### Changed
 

@@ -1,26 +1,28 @@
 import type { McpServer } from '@modelcontextprotocol/server';
 import * as z from 'zod';
-import type { LaunchCreateDto } from '../../shared/openapi/launch-dto.js';
-import { omitUndefined } from '../../shared/record-utils.js';
-import { isSuccess } from '../../shared/result.js';
+import type { LaunchCreateDto } from '@shared/openapi/launch-dto.js';
+import { omitUndefined } from '@shared/record-utils.js';
+import { isSuccess } from '@shared/result.js';
 import {
   createLaunch,
   getLaunchProgress,
   getLaunchStatistic,
-} from '../../domain/launch/index.js';
+  getLaunchTestResultsFlat,
+} from '@domain/launch/index.js';
 
 const launchTagSchema = z.object({
   id: z.number().optional(),
   name: z.string().optional(),
 });
 
+/** Register launch MCP tools. */
 export const registerLaunchTools = (server: McpServer) => {
   server.registerTool(
     'launch_create',
     {
       title: 'Create Launch',
       description:
-        'Create a test run (launch). POST /api/launch; body needs name and projectId.',
+        'Create a test run (launch). Body requires name and projectId.',
       inputSchema: z.object({
         name: z.string().min(1).describe('Launch name'),
         projectId: z.number().describe('Project ID'),
@@ -30,12 +32,12 @@ export const registerLaunchTools = (server: McpServer) => {
         tags: z
           .array(launchTagSchema)
           .optional()
-          .describe('Launch tags (id and/or name per LaunchTagDto)'),
+          .describe('Launch tags (id and/or name per tag)'),
         extra: z
           .record(z.string(), z.unknown())
           .optional()
           .describe(
-            'Extra LaunchCreateDto fields (e.g. issues, links) merged into JSON body'
+            'Extra create-launch fields (e.g. issues, links) merged into JSON body'
           ),
       }),
     },
@@ -78,7 +80,7 @@ export const registerLaunchTools = (server: McpServer) => {
     {
       title: 'Get Launch Statistic',
       description:
-        'Launch run summary: counts by test status and progress (ready). GET /api/launch/{id}/statistic and GET /api/launch/{id}/progress.',
+        'Launch run summary: counts by test status and progress (ready).',
       inputSchema: z.object({
         launchId: z.number().describe('Launch ID'),
       }),
@@ -110,6 +112,56 @@ export const registerLaunchTools = (server: McpServer) => {
       };
       return {
         content: [{ type: 'text', text: JSON.stringify(payload, null, 2) }],
+      };
+    }
+  );
+
+  server.registerTool(
+    'launch_list_test_results',
+    {
+      title: 'List Launch Test Results',
+      description:
+        'Flat paginated test results for a launch (rows: id, name, testCaseId, status, duration, etc.).',
+      annotations: { readOnlyHint: true },
+      inputSchema: z.object({
+        launchId: z.number().describe('Launch ID'),
+        search: z.string().optional().describe('Search filter'),
+        filterId: z.number().optional().describe('Saved filter ID'),
+        page: z.number().optional().describe('Page index (0-based)'),
+        size: z.number().optional().describe('Page size (max 100)'),
+        sort: z
+          .union([z.string(), z.array(z.string())])
+          .optional()
+          .describe(
+            'Sort, e.g. name,ASC (default). Use an array for multiple criteria (repeated sort query params).'
+          ),
+      }),
+    },
+    async (args: {
+      launchId: number;
+      search?: string;
+      filterId?: number;
+      page?: number;
+      size?: number;
+      sort?: string | string[];
+    }) => {
+      const result = await getLaunchTestResultsFlat(args.launchId, {
+        search: args.search,
+        filterId: args.filterId,
+        page: args.page,
+        size: args.size,
+        sort: args.sort,
+      });
+      if (!isSuccess(result)) {
+        return {
+          content: [{ type: 'text', text: `Error: ${result.error.message}` }],
+          isError: true,
+        };
+      }
+      return {
+        content: [
+          { type: 'text', text: JSON.stringify(result.value, null, 2) },
+        ],
       };
     }
   );

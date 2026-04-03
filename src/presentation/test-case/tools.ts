@@ -1,6 +1,6 @@
 import type { McpServer } from '@modelcontextprotocol/server';
 import * as z from 'zod';
-import { isSuccess } from '../../shared/result.js';
+import { isSuccess } from '@shared/result.js';
 import {
   getTestCase,
   getTestCaseDetail,
@@ -11,7 +11,7 @@ import {
   updateTestCaseCustomFields,
   searchTestCasesByAQL,
   listTestCasesInTree,
-} from '../../domain/test-case/index.js';
+} from '@domain/test-case/index.js';
 
 const testCaseIdOnly = z.object({
   id: z.number().describe('Allure test case ID (same as in TestOps UI / URL)'),
@@ -37,6 +37,7 @@ async function handleGetTestCaseScenario(args: { id: number }) {
   };
 }
 
+/** Register test case MCP tools. */
 export const registerTestCaseTools = (server: McpServer) => {
   server.registerTool(
     'testcase_get',
@@ -68,7 +69,7 @@ export const registerTestCaseTools = (server: McpServer) => {
     {
       title: 'Get Test Case Detail',
       description:
-        'Aggregated card: name, description, tags, custom fields, and step texts as a simple list. For the raw scenario graph (step actions + expected results per step from /step), use testcase_get_scenario or testcase_get_step instead — not this tool.',
+        'Aggregated card: name, description, tags, custom fields, and step texts as a simple list. For the raw scenario graph (step actions and expected results per step), use testcase_get_scenario or testcase_get_step instead — not this tool.',
       annotations: { readOnlyHint: true },
       inputSchema: z.object({
         id: z.number().describe('Test case ID'),
@@ -95,7 +96,7 @@ export const registerTestCaseTools = (server: McpServer) => {
     {
       title: 'Get Test Case Scenario',
       description:
-        'Normalized scenario from GET /api/testcase/{id}/step (scenarioSteps, step bodies, expected results). For steps + expected results use this or testcase_get_step only — call by this exact name from tools/list.',
+        'Normalized scenario JSON (scenarioSteps, step bodies, expected results). For steps and expected results use this or testcase_get_step only — call by this exact name from tools/list.',
       annotations: { readOnlyHint: true },
       inputSchema: testCaseIdOnly,
     },
@@ -250,7 +251,7 @@ export const registerTestCaseTools = (server: McpServer) => {
     {
       title: 'List Test Cases in Tree',
       description:
-        'List test cases for a project tree (Allure TestOps GET /api/v2/project/{projectId}/test-case/tree/tree-node). Requires treeId. Returns a tree node with paginated children; leaf nodes include testCaseId. Use parentNodeId to page into a folder.',
+        'List test cases under a project tree. Requires treeId. Returns a tree node with paginated children; leaf nodes include testCaseId. Use parentNodeId to page into a folder.',
       inputSchema: z.object({
         projectId: z.number().describe('Project ID'),
         treeId: z.number().describe('Test case tree ID'),

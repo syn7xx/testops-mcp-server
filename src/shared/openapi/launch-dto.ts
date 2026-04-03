@@ -1,6 +1,4 @@
-/**
- * Request/response DTOs for launch and test-plan run HTTP APIs.
- */
+/** Launch and test-plan run payloads. */
 
 /** Tag attached to a launch. */
 export interface LaunchTagDto {
@@ -53,7 +51,7 @@ export interface EnvironmentSetDto {
   values?: EnvVarValueDto[];
 }
 
-/** Body for `POST /api/launch`. Required: `name`, `projectId`. */
+/** Create-launch request body. Required: `name`, `projectId`. */
 export interface LaunchCreateDto {
   name: string;
   projectId: number;
@@ -65,7 +63,7 @@ export interface LaunchCreateDto {
   tags?: LaunchTagDto[];
 }
 
-/** Launch returned by `POST /api/launch` and `POST /api/testplan/{id}/run`. */
+/** Launch resource returned after create or test-plan run. */
 export interface LaunchDto {
   autoclose?: boolean;
   closed?: boolean;
@@ -83,19 +81,19 @@ export interface LaunchDto {
   tags?: LaunchTagDto[];
 }
 
-/** Count of test results for one status (`GET /api/launch/{id}/statistic`). */
+/** Count of test results for one status in a launch. */
 export interface TestStatusCountDto {
   count?: number;
   /** Backend test status enum value (e.g. passed, failed, broken). */
   status?: string;
 }
 
-/** Launch progress widget payload (`GET /api/launch/{id}/progress`). */
+/** Launch progress widget payload. */
 export interface LaunchProgressDto {
   ready?: boolean;
 }
 
-/** Body for `POST /api/testplan/{id}/run`. Required: `launchName`. */
+/** Test-plan run request body. Required: `launchName`. */
 export interface TestPlanRunRequestDto {
   envVarValueSets?: EnvironmentSetDto[];
   issues?: IssueDto[];

@@ -39,10 +39,7 @@ function normalizeBaseUrl(raw: string): string {
   return s.replace(/\/+$/, '');
 }
 
-/**
- * Parse argv with `node:util` parseArgs (strict: unknown flags and positionals are rejected),
- * then merge env TESTOPS_URL / TESTOPS_TOKEN. Base URL is trimmed and has trailing slashes removed.
- */
+/** Parse CLI argv and env into base URL and API token. */
 export function parseTestOpsServerArgs(argv: string[]): TestOpsServerArgs {
   let values: { url?: string; token?: string; help?: boolean };
   try {
