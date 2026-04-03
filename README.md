@@ -226,6 +226,21 @@ src/
 └── server.ts         # MCP server configuration
 ```
 
+## Releasing
+
+Publishing to **npm** is only via the GitHub Actions workflow **Release** (`release-it`). The **CI** workflow only runs lint and build.
+
+**This workflow does not run on `git push`.** It is triggered **only** when someone opens **Actions → Release → Run workflow**, selects branch **`main`**, and chooses **patch** / **minor** / **major**. A plain merge or push to `main` will not start `release-it` (by design, so every commit does not bump the version).
+
+Steps:
+
+1. Repository secret **`NPM_TOKEN`** (npm token with publish access for `@syn7xx`).
+2. **Actions** tab → **Release** in the left list → **Run workflow** → branch **main** → run.
+
+That bumps `package.json`, updates `CHANGELOG.md`, creates a git tag, pushes to `main`, and runs **`npm publish`**. Locally you can use `npm run release` (interactive) or `npm run release:patch` / `:minor` / `:major` instead.
+
+If the **Release** workflow is missing in **Actions**, ensure `.github/workflows/release.yml` is on the **default branch** and that Actions are allowed in the repository **Settings → Actions → General**.
+
 ## License
 
 MIT
