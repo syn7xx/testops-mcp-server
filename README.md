@@ -37,6 +37,18 @@ Or with npx (if not installed globally):
 npx @syn7xx/testops-mcp-server --url <testops-url> --token <api-token>
 ```
 
+## TLS verification (optional)
+
+If TestOps is served with a **self-signed certificate** or HTTPS is intercepted by a **corporate proxy** and Node.js fails TLS validation, you can disable certificate verification **for that Node process** by setting:
+
+```bash
+export NODE_TLS_REJECT_UNAUTHORIZED=0
+```
+
+Then start the server as usual (`npm start`, `npx`, or your MCP `command`). In MCP configs that support server environment variables, set the same name next to `TESTOPS_URL` / `TESTOPS_TOKEN` (e.g. OpenCode `environment`, or your client’s `env` field).
+
+**Security:** this disables TLS peer verification for **all** HTTPS calls from that process. Prefer installing the correct CA in the system trust store; use `NODE_TLS_REJECT_UNAUTHORIZED=0` only when necessary and in a trusted environment.
+
 ## MCP setup in AI tools
 
 Configs differ by product:
@@ -200,6 +212,7 @@ Then use `"command": "testops-mcp-server"` and `"args": ["--url", "...", "--toke
 | Tool | Description |
 |------|-------------|
 | `launch_create` | Create a launch directly |
+| `launch_stop` | Close/stop a launch (end the run) |
 | `launch_get_statistic` | Run summary: counts by status + progress `ready` |
 | `launch_list_test_results` | Flat paginated test results for a launch (`sort` can be a string or array for multiple sort params) |
 

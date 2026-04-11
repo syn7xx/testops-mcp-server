@@ -8,6 +8,7 @@ import {
   getLaunchProgress,
   getLaunchStatistic,
   getLaunchTestResultsFlat,
+  stopLaunch,
 } from '@domain/launch/index.js';
 
 const launchTagSchema = z.object({
@@ -70,6 +71,34 @@ export const registerLaunchTools = (server: McpServer) => {
       return {
         content: [
           { type: 'text', text: JSON.stringify(result.value, null, 2) },
+        ],
+      };
+    }
+  );
+
+  server.registerTool(
+    'launch_stop',
+    {
+      title: 'Stop Launch',
+      description: 'Close/stop a running launch (ends the run on TestOps).',
+      inputSchema: z.object({
+        launchId: z.number().describe('Launch ID'),
+      }),
+    },
+    async (args: { launchId: number }) => {
+      const result = await stopLaunch(args.launchId);
+      if (!isSuccess(result)) {
+        return {
+          content: [{ type: 'text', text: `Error: ${result.error.message}` }],
+          isError: true,
+        };
+      }
+      return {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify({ ok: true, launchId: args.launchId }),
+          },
         ],
       };
     }

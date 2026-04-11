@@ -23,6 +23,13 @@ export const createLaunch = async (
   return apiPost<LaunchDto>('/api/launch', body);
 };
 
+/** Close/stop a launch (POST /api/launch/{id}/close, 204). */
+export const stopLaunch = async (
+  launchId: number
+): Promise<Result<void, Error>> => {
+  return apiPost<void>(`/api/launch/${launchId}/close`);
+};
+
 /** Aggregated test result counts by status for a launch. */
 export const getLaunchStatistic = async (
   launchId: number
