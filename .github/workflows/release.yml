@@ -21,7 +21,7 @@ concurrency:
 
 jobs:
   release:
-    name: release-it
+    name: release
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
     steps:
@@ -48,8 +48,31 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-      - name: Run release-it
+      - name: Bump version, update changelog, create tag
+        run: npx commit-and-tag-version --release-as ${{ inputs.increment }}
+
+      - name: Push commit and tag
+        run: git push --follow-tags
+
+      - name: Build
+        run: npm run build
+
+      - name: Publish to npm
+        run: npm publish --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Create GitHub Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: npx release-it --ci --increment=${{ inputs.increment }}
+        run: |
+          TAG=$(git describe --tags --abbrev=0)
+          VERSION="${TAG#v}"
+          echo "Creating GitHub Release for ${TAG}"
+
+          # Extract release notes from CHANGELOG.md (section between first and second ## headers)
+          RELEASE_NOTES=$(awk "/^## \[${VERSION}\]/{found=1; next} /^## /{if(found) exit} found{print}" CHANGELOG.md)
+
+          gh release create "${TAG}" \
+            --title "Release ${TAG}" \
+            --notes "${RELEASE_NOTES:-Release ${TAG}}"

@@ -3,7 +3,7 @@
 All notable changes to this project are documented in this file.
 
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).  
-On each release, [release-it](https://github.com/release-it/release-it) with `@release-it/conventional-changelog` prepends new sections from [Conventional Commits](https://www.conventionalcommits.org/) since the previous tag.
+On each release, [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) prepends new sections from [Conventional Commits](https://www.conventionalcommits.org/) since the previous tag.
 
 ## [Unreleased]
 
