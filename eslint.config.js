@@ -1,3 +1,5 @@
+/* eslint-disable no-underscore-dangle */
+/* eslint-disable import/no-extraneous-dependencies */
 import eslintPluginPrettierRecommended from 'eslint-plugin-prettier/recommended';
 import globals from 'globals';
 import tseslint from 'typescript-eslint';
@@ -41,13 +43,7 @@ export default [
       'no-console': 'off',
 
       // Prefer stability over style-only refactors in existing code.
-      'prefer-template': 'off',
-      'no-nested-ternary': 'off',
-      'no-use-before-define': 'off',
-      'no-restricted-syntax': 'off',
-      'prefer-destructuring': 'off',
       'import/prefer-default-export': 'off',
-      'import/order': 'off',
     },
   },
   eslintPluginPrettierRecommended,

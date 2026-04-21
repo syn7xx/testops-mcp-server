@@ -123,10 +123,11 @@ async function executeRequest<T>(
       if (value === undefined) {
         return;
       }
+
       if (Array.isArray(value)) {
-        for (const item of value) {
+        value.forEach((item) => {
           url.searchParams.append(key, String(item));
-        }
+        });
       } else {
         url.searchParams.set(key, String(value));
       }

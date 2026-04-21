@@ -25,14 +25,13 @@ function normalizeBaseUrl(raw: string): string {
     parsed = new URL(s);
   } catch {
     console.error(
-      'Invalid --url / TESTOPS_URL: expected an absolute http(s) URL (e.g. https://testops.example.com)\n' +
-        usage
+      `Invalid --url / TESTOPS_URL: expected an absolute http(s) URL (e.g. https://testops.example.com)\n${usage}`
     );
     process.exit(1);
   }
   if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
     console.error(
-      'Invalid --url: only http: and https: are supported\n' + usage
+      `Invalid --url: only http: and https: are supported\n${usage}`
     );
     process.exit(1);
   }
@@ -67,8 +66,7 @@ export function parseTestOpsServerArgs(argv: string[]): TestOpsServerArgs {
 
   if (!urlRaw?.trim() || !tokenRaw?.trim()) {
     console.error(
-      'Required: --url / -u and --token / -t (or env TESTOPS_URL, TESTOPS_TOKEN)\n\n' +
-        usage
+      `Required: --url / -u and --token / -t (or env TESTOPS_URL, TESTOPS_TOKEN)\n\n${usage}`
     );
     process.exit(1);
   }

@@ -53,23 +53,35 @@ export const getLaunchTestResultsFlat = async (
     page: params?.page,
     size: params?.size,
   });
-  const sort =
-    params?.sort === undefined
-      ? 'name,ASC'
-      : Array.isArray(params.sort)
-        ? params.sort.length > 0
-          ? params.sort
-          : 'name,ASC'
-        : params.sort;
+  const rawSort = params?.sort;
+  let sort: string | string[] | undefined;
+
+  if (typeof rawSort === 'string') {
+    sort = rawSort;
+  } else if (Array.isArray(rawSort)) {
+    // Accept readonly arrays from API types, but pass a mutable array to request layer.
+    sort = rawSort.length > 0 ? [...rawSort] : undefined;
+  }
+
+  type QueryParamValue =
+    | string
+    | number
+    | boolean
+    | undefined
+    | readonly (string | number | boolean)[];
+
+  const query: Record<string, QueryParamValue> = {
+    search: params?.search,
+    filterId: params?.filterId,
+    page,
+    size,
+  };
+  if (sort !== undefined) {
+    query.sort = sort;
+  }
 
   return apiGet<PageTestResultFlatDto>(
     `/api/v2/launch/${launchId}/test-result/flat`,
-    {
-      search: params?.search,
-      filterId: params?.filterId,
-      page,
-      size,
-      sort,
-    }
+    query
   );
 };

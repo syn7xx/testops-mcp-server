@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
-import { parseTestOpsServerArgs } from './args.js';
 import { initApiClient } from '@shared/api.js';
+import { parseTestOpsServerArgs } from './args.js';
 import { startServer } from './server.js';
 
 const { url, token } = parseTestOpsServerArgs(process.argv);
