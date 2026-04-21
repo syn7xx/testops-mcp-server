@@ -1,24 +1,24 @@
 # Changelog
 
-All notable changes to this project are documented in this file.
+All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
-The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).  
-On each release, [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) prepends new sections from [Conventional Commits](https://www.conventionalcommits.org/) since the previous tag.
+## 0.2.3 (2026-04-21)
 
-## [Unreleased]
 
-### Added
+### Features
 
-- MCP tool `launch_get_statistic` (aggregated counts by status + progress `ready` as JSON)
-- MCP tool `launch_list_test_results` (flat paginated test results for a launch)
-- HTTP client: query params may be arrays (repeated keys, e.g. multiple `sort`) without changing scalar usage
-- Shared HTTP DTO modules: `common-dto`, `project-dto`, `test-plan-dto`, `test-case-dto` (aligned with `launch-dto`)
-- TypeScript path aliases `@shared/*`, `@domain/*`, `@presentation/*`; `npm run build` runs `tsc-alias` so `dist/` keeps relative imports for Node
+* add testcase_get_step alias and clarify scenario vs detail ([3b0bc35](https://github.com/syn7xx/testops-mcp-server/commit/3b0bc35233ed162babfe96262e1171941bcc4ec6))
+* add testcase_list_in_tree MCP tool ([b606284](https://github.com/syn7xx/testops-mcp-server/commit/b606284b8e8aacf7f1632114fd84625b398181aa))
+* CI, lint, CLI parsing, JWT 401 retry, MCP docs ([e091df4](https://github.com/syn7xx/testops-mcp-server/commit/e091df40cfbe73a9066f638f20b03276e1211876))
+* initial release 0.1.0 ([2ea3134](https://github.com/syn7xx/testops-mcp-server/commit/2ea3134b8b9ec00f4623f2cf282b220e41da92f0))
+* launch MCP tools and test plan run/sync ([825c7de](https://github.com/syn7xx/testops-mcp-server/commit/825c7deda798fb3a638e3b3099e3fb352b55c137))
+* launch_stop, no-content HTTP handling, docs and API errors ([f8015f3](https://github.com/syn7xx/testops-mcp-server/commit/f8015f3dd5be2091f3e1412ea2bc1e0908fb6ed5))
 
-### Changed
 
-- `getTestPlanStat` return type is now `TestPlanStatDto` (aligned with TestOps test-plan stat payload)
-- Domain modules no longer re-export OpenAPI DTOs; import `@shared/openapi/*-dto` (or use `*Dto` return types from services) instead
+### Bug Fixes
+
+* add shebang for CLI executable ([7d30c58](https://github.com/syn7xx/testops-mcp-server/commit/7d30c58b0e446031f74ce1d9672d51e7d7480868))
+* CFV null-safety, release changelog staging, scenario step API shape ([220f657](https://github.com/syn7xx/testops-mcp-server/commit/220f6572b1346dd28f9476edbd8c5a3b718ef289))
 
 ## [0.1.5] - 2026-04-03
 
