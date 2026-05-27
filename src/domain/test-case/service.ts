@@ -1,6 +1,8 @@
 import { apiGet, apiPatch, apiPost } from '@shared/api.js';
 import type { PageDto } from '@shared/openapi/common-dto.js';
 import type {
+  CustomFieldDto,
+  CustomFieldProjectWithValuesDto,
   CustomFieldWithValuesDto,
   NormalizedScenarioDto,
   TestCaseCreateV2Dto,
@@ -27,9 +29,13 @@ export async function getTestCaseScenario(
 
 /** Get custom field values for a test case. */
 export async function getTestCaseCustomFields(
-  testCaseId: number
-): Promise<Result<CustomFieldWithValuesDto[], Error>> {
-  return apiGet<CustomFieldWithValuesDto[]>(`/api/testcase/${testCaseId}/cfv`);
+  testCaseId: number,
+  projectId: number
+): Promise<Result<CustomFieldProjectWithValuesDto[], Error>> {
+  return apiGet<CustomFieldProjectWithValuesDto[]>(
+    `/api/testcase/${testCaseId}/cfv`,
+    { projectId }
+  );
 }
 
 /** Extract step bodies from normalized scenario. */
@@ -49,7 +55,8 @@ function extractStepsFromScenario(scenario: NormalizedScenarioDto): string[] {
 
 /** Get test case detail with steps and custom fields (parallel fetches). */
 export const getTestCaseDetail = async (
-  id: number
+  id: number,
+  projectId?: number
 ): Promise<Result<TestCaseDetail, Error>> => {
   const testCaseResult = await apiGet<TestCaseDto>(`/api/testcase/${id}`);
 
@@ -58,11 +65,22 @@ export const getTestCaseDetail = async (
   }
 
   const testCase = testCaseResult.value;
+  const effectiveProjectId = projectId ?? testCase.projectId;
+
+  if (!effectiveProjectId) {
+    return success({
+      ...testCase,
+      steps: [],
+      customFields: {},
+      tags: testCase.tags?.flatMap((t) => (t.name != null ? [t.name] : [])) ?? [],
+      owner: testCase.createdBy ?? '',
+    });
+  }
 
   // Fetch additional data in parallel
   const [scenarioResult, cfResult] = await Promise.all([
     getTestCaseScenario(id),
-    getTestCaseCustomFields(id),
+    getTestCaseCustomFields(id, effectiveProjectId),
   ]);
 
   const steps = isSuccess(scenarioResult)
@@ -144,9 +162,14 @@ export const updateTestCaseCustomFields = async (
   testCaseId: number,
   fields: Array<{ customFieldId: number; valueIds: number[] }>
 ): Promise<Result<void, Error>> => {
+  const payload: CustomFieldWithValuesDto[] = fields.map((f) => ({
+    customField: { id: f.customFieldId },
+    values: f.valueIds.map((id) => ({ id, name: '' })),
+  }));
+
   const result = await apiPatch<void>(
     `/api/testcase/${testCaseId}/cfv`,
-    fields
+    payload
   );
   return map(result, () => undefined);
 };
@@ -275,4 +298,48 @@ export const createScenarioStep = async (
   }
 
   return success(scenario);
+};
+
+export interface ProjectCustomFieldDto {
+  id?: number;
+  name?: string;
+  archived?: boolean;
+  values?: Array<{ id: number; name: string }>;
+}
+
+export const getProjectCustomFields = async (
+  projectId: number
+): Promise<Result<ProjectCustomFieldDto[], Error>> => {
+  const result = await apiGet<PageDto<CustomFieldDto>>(
+    `/api/project/${projectId}/cf`,
+    { size: 100 }
+  );
+
+  if (!isSuccess(result)) {
+    return result as Result<ProjectCustomFieldDto[], Error>;
+  }
+
+  const customFields = (result.value.content ?? []).map((cf) => ({
+    id: cf.id,
+    name: cf.name,
+    archived: cf.archived,
+  }));
+
+  return success(customFields);
+};
+
+export const getProjectCustomFieldValues = async (
+  projectId: number,
+  customFieldId: number
+): Promise<Result<Array<{ id: number; name: string }>, Error>> => {
+  const result = await apiGet<PageDto<{ id: number; name: string; testCasesCount?: number }>>(
+    `/api/project/${projectId}/cfv`,
+    { customFieldId, size: 100 }
+  );
+
+  if (!isSuccess(result)) {
+    return result as Result<Array<{ id: number; name: string }>, Error>;
+  }
+
+  return success((result.value.content ?? []).map((v) => ({ id: v.id, name: v.name })));
 };

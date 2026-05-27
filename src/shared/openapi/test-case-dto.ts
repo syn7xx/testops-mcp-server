@@ -42,6 +42,7 @@ export interface NormalizedScenarioDto {
 export interface CustomFieldDto {
   id?: number;
   name?: string;
+  archived?: boolean;
 }
 
 export interface CustomFieldValueDto {
@@ -131,6 +132,20 @@ export interface CustomFieldValueWithCfDto {
   name?: string;
   global?: boolean;
   customField?: CustomFieldDto;
+  valueIds?: number[];
+}
+
+export interface CustomFieldWithValuesUpdateDto {
+  customField?: CustomFieldDto;
+  values?: CustomFieldValueDto[];
+}
+
+export interface CustomFieldProjectWithValuesDto {
+  customField?: CustomFieldDto;
+  values?: CustomFieldValueDto[];
+  defaultValueId?: number;
+  locked?: boolean;
+  required?: boolean;
 }
 
 export interface MemberDto {

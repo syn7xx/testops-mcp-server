@@ -13,6 +13,8 @@ import {
   listTestCasesInTree,
   createTestCase,
   createScenarioStep,
+  getProjectCustomFields,
+  getProjectCustomFieldValues,
 } from '@domain/test-case/index.js';
 
 function normalizeLineBreaks(text: string | undefined): string | undefined {
@@ -80,10 +82,11 @@ export const registerTestCaseTools = (server: McpServer) => {
       annotations: { readOnlyHint: true },
       inputSchema: z.object({
         id: z.number().describe('Test case ID'),
+        projectId: z.number().optional().describe('Project ID (optional, will use test case projectId if omitted)'),
       }),
     },
-    async (args: { id: number }) => {
-      const result = await getTestCaseDetail(args.id);
+    async (args: { id: number; projectId?: number }) => {
+      const result = await getTestCaseDetail(args.id, args.projectId);
       if (!isSuccess(result)) {
         return {
           content: [{ type: 'text', text: `Error: ${result.error.message}` }],
@@ -204,10 +207,11 @@ export const registerTestCaseTools = (server: McpServer) => {
       description: 'Get custom field values for a test case',
       inputSchema: z.object({
         id: z.number().describe('Test case ID'),
+        projectId: z.number().describe('Project ID'),
       }),
     },
-    async (args: { id: number }) => {
-      const result = await getTestCaseCustomFields(args.id);
+    async (args: { id: number; projectId: number }) => {
+      const result = await getTestCaseCustomFields(args.id, args.projectId);
       if (!isSuccess(result)) {
         return {
           content: [{ type: 'text', text: `Error: ${result.error.message}` }],
@@ -251,7 +255,9 @@ export const registerTestCaseTools = (server: McpServer) => {
         };
       }
       return {
-        content: [{ type: 'text', text: 'Custom fields updated successfully' }],
+        content: [
+          { type: 'text', text: JSON.stringify({ success: true }, null, 2) },
+        ],
       };
     }
   );
@@ -411,6 +417,10 @@ export const registerTestCaseTools = (server: McpServer) => {
                 .number()
                 .optional()
                 .describe('Custom field definition ID'),
+              valueIds: z
+                .array(z.number())
+                .optional()
+                .describe('Array of value IDs to set (for multi-select fields)'),
             })
           )
           .optional()
@@ -446,7 +456,7 @@ export const registerTestCaseTools = (server: McpServer) => {
         testLayerId?: number;
         workflowId?: number;
         tags?: Array<{ name: string }>;
-        customFields?: Array<{ id?: number; name?: string; customField?: { id: number } }>;
+        customFields?: Array<{ id?: number; name?: string; customField?: { id: number }; valueIds?: number[] }>;
         links?: Array<{ name?: string; type?: string; url?: string }>;
         members?: Array<{ id?: number }>;
       } = {
@@ -473,8 +483,9 @@ export const registerTestCaseTools = (server: McpServer) => {
           id: cf.id,
           name: cf.name,
           customField: cf.customFieldId
-            ? { id: cf.customFieldId, name: '' }
+            ? { id: cf.customFieldId }
             : undefined,
+          valueIds: cf.valueIds,
         }));
       }
 
@@ -524,6 +535,62 @@ export const registerTestCaseTools = (server: McpServer) => {
             type: 'text',
             text: JSON.stringify(testCase, null, 2),
           },
+        ],
+      };
+    }
+  );
+
+  server.registerTool(
+    'project_get_custom_fields',
+    {
+      title: 'Get Project Custom Fields',
+      description:
+        'Get all custom fields for a project. Returns custom field definitions with their IDs and names.',
+      inputSchema: z.object({
+        projectId: z.number().describe('Project ID'),
+      }),
+    },
+    async (args: { projectId: number }) => {
+      const result = await getProjectCustomFields(args.projectId);
+      if (!isSuccess(result)) {
+        return {
+          content: [{ type: 'text', text: `Error: ${result.error.message}` }],
+          isError: true,
+        };
+      }
+      return {
+        content: [
+          { type: 'text', text: JSON.stringify(result.value, null, 2) },
+        ],
+      };
+    }
+  );
+
+  server.registerTool(
+    'project_get_custom_field_values',
+    {
+      title: 'Get Project Custom Field Values',
+      description:
+        'Get all available values for a specific custom field in a project. Use this to find the value IDs for setting custom fields.',
+      inputSchema: z.object({
+        projectId: z.number().describe('Project ID'),
+        customFieldId: z.number().describe('Custom field ID'),
+      }),
+    },
+    async (args: { projectId: number; customFieldId: number }) => {
+      const result = await getProjectCustomFieldValues(
+        args.projectId,
+        args.customFieldId
+      );
+      if (!isSuccess(result)) {
+        return {
+          content: [{ type: 'text', text: `Error: ${result.error.message}` }],
+          isError: true,
+        };
+      }
+      return {
+        content: [
+          { type: 'text', text: JSON.stringify(result.value, null, 2) },
         ],
       };
     }
