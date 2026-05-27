@@ -6,8 +6,8 @@ import {
   findProjectByName,
   getProjectById,
 } from '@domain/project/index.js';
+import { handleResult } from '../tool-utils.js';
 
-/** Register project MCP tools. */
 export const registerProjectTools = (server: McpServer) => {
   server.registerTool(
     'project_list',
@@ -22,26 +22,16 @@ export const registerProjectTools = (server: McpServer) => {
     },
     async (args: { page?: number; size?: number; sort?: string }) => {
       const result = await findProjects(args);
-
       if (!isSuccess(result)) {
-        return {
-          content: [{ type: 'text', text: `Error: ${result.error.message}` }],
-          isError: true,
-        };
+        return handleResult(result);
       }
-
+      const { items, page, size, totalElements, hasNext } = result.value;
       return {
         content: [
           {
             type: 'text',
             text: JSON.stringify(
-              {
-                items: result.value.items,
-                page: result.value.page,
-                size: result.value.size,
-                totalElements: result.value.totalElements,
-                hasNext: result.value.hasNext,
-              },
+              { items, page, size, totalElements, hasNext },
               null,
               2
             ),
@@ -62,26 +52,16 @@ export const registerProjectTools = (server: McpServer) => {
     },
     async (args: { name: string }) => {
       const result = await findProjectByName(args.name);
-
       if (!isSuccess(result)) {
-        return {
-          content: [{ type: 'text', text: `Error: ${result.error.message}` }],
-          isError: true,
-        };
+        return handleResult(result);
       }
-
       if (!result.value) {
         return {
           content: [{ type: 'text', text: `Project "${args.name}" not found` }],
           isError: true,
         };
       }
-
-      return {
-        content: [
-          { type: 'text', text: JSON.stringify(result.value, null, 2) },
-        ],
-      };
+      return handleResult(result);
     }
   );
 
@@ -94,21 +74,6 @@ export const registerProjectTools = (server: McpServer) => {
         id: z.number().describe('Project ID'),
       }),
     },
-    async (args: { id: number }) => {
-      const result = await getProjectById(args.id);
-
-      if (!isSuccess(result)) {
-        return {
-          content: [{ type: 'text', text: `Error: ${result.error.message}` }],
-          isError: true,
-        };
-      }
-
-      return {
-        content: [
-          { type: 'text', text: JSON.stringify(result.value, null, 2) },
-        ],
-      };
-    }
+    async (args: { id: number }) => handleResult(await getProjectById(args.id))
   );
 };

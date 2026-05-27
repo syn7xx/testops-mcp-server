@@ -10,13 +10,13 @@ import {
   getLaunchTestResultsFlat,
   stopLaunch,
 } from '@domain/launch/index.js';
+import { handleResult } from '../tool-utils.js';
 
 const launchTagSchema = z.object({
   id: z.number().optional(),
   name: z.string().optional(),
 });
 
-/** Register launch MCP tools. */
 export const registerLaunchTools = (server: McpServer) => {
   server.registerTool(
     'launch_create',
@@ -51,28 +51,19 @@ export const registerLaunchTools = (server: McpServer) => {
       tags?: Array<{ id?: number; name?: string }>;
       extra?: Record<string, unknown>;
     }) => {
-      const body = {
+      const body: LaunchCreateDto = {
         name: args.name,
         projectId: args.projectId,
-        ...(args.autoclose !== undefined ? { autoclose: args.autoclose } : {}),
-        ...(args.external !== undefined ? { external: args.external } : {}),
-        ...(args.releaseId !== undefined ? { releaseId: args.releaseId } : {}),
-        ...(args.tags?.length ? { tags: args.tags } : {}),
-        ...(args.extra ? omitUndefined(args.extra) : {}),
-      } as LaunchCreateDto;
-
-      const result = await createLaunch(body);
-      if (!isSuccess(result)) {
-        return {
-          content: [{ type: 'text', text: `Error: ${result.error.message}` }],
-          isError: true,
-        };
-      }
-      return {
-        content: [
-          { type: 'text', text: JSON.stringify(result.value, null, 2) },
-        ],
+        ...omitUndefined({
+          autoclose: args.autoclose,
+          external: args.external,
+          releaseId: args.releaseId,
+          tags: args.tags?.length ? args.tags : undefined,
+          ...args.extra,
+        }),
       };
+
+      return handleResult(await createLaunch(body));
     }
   );
 
@@ -88,10 +79,7 @@ export const registerLaunchTools = (server: McpServer) => {
     async (args: { launchId: number }) => {
       const result = await stopLaunch(args.launchId);
       if (!isSuccess(result)) {
-        return {
-          content: [{ type: 'text', text: `Error: ${result.error.message}` }],
-          isError: true,
-        };
+        return handleResult(result);
       }
       return {
         content: [
@@ -120,27 +108,25 @@ export const registerLaunchTools = (server: McpServer) => {
         getLaunchProgress(args.launchId),
       ]);
       if (!isSuccess(statisticResult)) {
-        return {
-          content: [
-            { type: 'text', text: `Error: ${statisticResult.error.message}` },
-          ],
-          isError: true,
-        };
+        return handleResult(statisticResult);
       }
       if (!isSuccess(progressResult)) {
-        return {
-          content: [
-            { type: 'text', text: `Error: ${progressResult.error.message}` },
-          ],
-          isError: true,
-        };
+        return handleResult(progressResult);
       }
-      const payload = {
-        statistic: statisticResult.value,
-        progress: progressResult.value,
-      };
       return {
-        content: [{ type: 'text', text: JSON.stringify(payload, null, 2) }],
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify(
+              {
+                statistic: statisticResult.value,
+                progress: progressResult.value,
+              },
+              null,
+              2
+            ),
+          },
+        ],
       };
     }
   );
@@ -173,25 +159,15 @@ export const registerLaunchTools = (server: McpServer) => {
       page?: number;
       size?: number;
       sort?: string | string[];
-    }) => {
-      const result = await getLaunchTestResultsFlat(args.launchId, {
-        search: args.search,
-        filterId: args.filterId,
-        page: args.page,
-        size: args.size,
-        sort: args.sort,
-      });
-      if (!isSuccess(result)) {
-        return {
-          content: [{ type: 'text', text: `Error: ${result.error.message}` }],
-          isError: true,
-        };
-      }
-      return {
-        content: [
-          { type: 'text', text: JSON.stringify(result.value, null, 2) },
-        ],
-      };
-    }
+    }) =>
+      handleResult(
+        await getLaunchTestResultsFlat(args.launchId, {
+          search: args.search,
+          filterId: args.filterId,
+          page: args.page,
+          size: args.size,
+          sort: args.sort,
+        })
+      )
   );
 };
