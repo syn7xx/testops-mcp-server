@@ -237,19 +237,33 @@ Routing is defined in each tool’s **description** in `tools/list`. For step ac
 | `testcase_get_step` | Same as `testcase_get_scenario` (alias for LLM-friendly naming) |
 | `testcase_update_step` | Update a step in scenario |
 | `testcase_set_scenario` | Replace all steps in scenario |
-| `testcase_get_custom_fields` | Get custom field values |
-| `testcase_update_custom_fields` | Update custom field values |
-| `testcase_search_by_aql` | Search test cases using AQL |
-| `testcase_list_in_tree` | List test cases in a project tree (`treeId`, optional `parentNodeId`) |
+| `testcase_get_custom_fields` | Get custom field values for a test case |
+| `testcase_update_custom_fields` | Set custom field values on a test case |
+| `testcase_search_by_aql` | Search test cases using AQL query |
+| `testcase_list_in_tree` | List test cases in a project tree with pagination |
+| `testcase_create` | Create a test case with optional steps, tags, custom fields, precondition/postcondition |
+
+### Project Custom Fields
+
+| Tool | Description |
+|------|-------------|
+| `project_get_custom_fields` | Get custom field definitions for a project with pagination (`{ items, total, page, size }`) |
+| `project_get_custom_field_values` | Get available values for a custom field with pagination (`{ items, total, page, size }`) |
 
 ## Project Structure
 
 ```
 src/
-├── shared/openapi/   # HTTP DTOs (`common-dto`, `project-dto`, `test-plan-dto`, `test-case-dto`, `launch-dto`, `launch-test-result-dto`)
+├── shared/openapi/   # HTTP DTOs (common-dto, project-dto, test-plan-dto, test-case-dto, launch-dto, launch-test-result-dto)
 ├── shared/           # Utilities, API client, pagination
-├── domain/           # Business logic (project, launch, test-plan, test-case)
-├── presentation/     # MCP tools (project, launch, test-plan, test-case)
+├── domain/
+│   ├── test-case/    # Business logic (service, scenario, custom-fields, create)
+│   └── ...           # Other domains (project, launch, test-plan)
+├── presentation/
+│   ├── tool-utils.ts  # handleResult helper for tools
+│   ├── test-case/
+│   │   └── tools/    # MCP tools (register, testcase-read, testcase-write, testcase-list, project-cf, schemas)
+│   └── ...           # Other presentations (project, launch, test-plan)
 ├── index.ts          # Entry point
 └── server.ts         # MCP server configuration
 ```

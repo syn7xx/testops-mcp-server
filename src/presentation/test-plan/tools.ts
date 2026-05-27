@@ -9,13 +9,13 @@ import {
   runTestPlan,
   syncTestPlan,
 } from '@domain/test-plan/index.js';
+import { handleResult } from '../tool-utils.js';
 
 const launchTagSchema = z.object({
   id: z.number().optional(),
   name: z.string().optional(),
 });
 
-/** Register test plan MCP tools. */
 export const registerTestPlanTools = (server: McpServer) => {
   server.registerTool(
     'testplan_get',
@@ -26,22 +26,7 @@ export const registerTestPlanTools = (server: McpServer) => {
         id: z.number().describe('Test plan ID'),
       }),
     },
-    async (args: { id: number }) => {
-      const result = await getTestPlan(args.id);
-
-      if (!isSuccess(result)) {
-        return {
-          content: [{ type: 'text', text: `Error: ${result.error.message}` }],
-          isError: true,
-        };
-      }
-
-      return {
-        content: [
-          { type: 'text', text: JSON.stringify(result.value, null, 2) },
-        ],
-      };
-    }
+    async (args: { id: number }) => handleResult(await getTestPlan(args.id))
   );
 
   server.registerTool(
@@ -63,26 +48,16 @@ export const registerTestPlanTools = (server: McpServer) => {
       sort?: string;
     }) => {
       const result = await getTestPlanTestCases(args.id, args);
-
       if (!isSuccess(result)) {
-        return {
-          content: [{ type: 'text', text: `Error: ${result.error.message}` }],
-          isError: true,
-        };
+        return handleResult(result);
       }
-
+      const { items, page, size, totalElements, hasNext } = result.value;
       return {
         content: [
           {
             type: 'text',
             text: JSON.stringify(
-              {
-                items: result.value.items,
-                page: result.value.page,
-                size: result.value.size,
-                totalElements: result.value.totalElements,
-                hasNext: result.value.hasNext,
-              },
+              { items, page, size, totalElements, hasNext },
               null,
               2
             ),
@@ -122,25 +97,16 @@ export const registerTestPlanTools = (server: McpServer) => {
       tags?: Array<{ id?: number; name?: string }>;
       extra?: Record<string, unknown>;
     }) => {
-      const body = {
+      const body: TestPlanRunRequestDto = {
         launchName: args.launchName,
-        ...(args.releaseId !== undefined ? { releaseId: args.releaseId } : {}),
-        ...(args.tags?.length ? { tags: args.tags } : {}),
-        ...(args.extra ? omitUndefined(args.extra) : {}),
-      } as TestPlanRunRequestDto;
-
-      const result = await runTestPlan(args.id, body);
-      if (!isSuccess(result)) {
-        return {
-          content: [{ type: 'text', text: `Error: ${result.error.message}` }],
-          isError: true,
-        };
-      }
-      return {
-        content: [
-          { type: 'text', text: JSON.stringify(result.value, null, 2) },
-        ],
+        ...omitUndefined({
+          releaseId: args.releaseId,
+          tags: args.tags?.length ? args.tags : undefined,
+          ...args.extra,
+        }),
       };
+
+      return handleResult(await runTestPlan(args.id, body));
     }
   );
 
@@ -154,21 +120,6 @@ export const registerTestPlanTools = (server: McpServer) => {
         id: z.number().describe('Test plan ID'),
       }),
     },
-    async (args: { id: number }) => {
-      const result = await syncTestPlan(args.id);
-
-      if (!isSuccess(result)) {
-        return {
-          content: [{ type: 'text', text: `Error: ${result.error.message}` }],
-          isError: true,
-        };
-      }
-
-      return {
-        content: [
-          { type: 'text', text: JSON.stringify(result.value, null, 2) },
-        ],
-      };
-    }
+    async (args: { id: number }) => handleResult(await syncTestPlan(args.id))
   );
 };

@@ -1,37 +1,26 @@
-import { apiGet, apiPatch, apiPost } from '@shared/api.js';
+import { apiGet } from '@shared/api.js';
 import type { PageDto } from '@shared/openapi/common-dto.js';
 import type {
-  CustomFieldWithValuesDto,
   NormalizedScenarioDto,
   TestCaseDto,
   TestCaseFullTreeNodeDto,
 } from '@shared/openapi/test-case-dto.js';
-import { PageParams, normalizePageParams } from '@shared/pagination.js';
-import { Result, map, isSuccess, success } from '@shared/result.js';
+import { normalizePageParams, type PageParams } from '@shared/pagination.js';
+import { Result, isSuccess, success, map } from '@shared/result.js';
+import { getTestCaseScenario } from './scenario.js';
+import { getTestCaseCustomFields } from './custom-fields.js';
 import type { TestCaseDetail, TestCaseSearchResult } from './types.js';
 
-/** Get a test case by ID. */
+function flattenTags(testCase: TestCaseDto): string[] {
+  return testCase.tags?.flatMap((t) => (t.name != null ? [t.name] : [])) ?? [];
+}
+
 export const getTestCase = async (
   id: number
 ): Promise<Result<TestCaseDto, Error>> => {
   return apiGet<TestCaseDto>(`/api/testcase/${id}`);
 };
 
-/** Get normalized scenario for a test case. */
-export async function getTestCaseScenario(
-  testCaseId: number
-): Promise<Result<NormalizedScenarioDto, Error>> {
-  return apiGet<NormalizedScenarioDto>(`/api/testcase/${testCaseId}/step`);
-}
-
-/** Get custom field values for a test case. */
-export async function getTestCaseCustomFields(
-  testCaseId: number
-): Promise<Result<CustomFieldWithValuesDto[], Error>> {
-  return apiGet<CustomFieldWithValuesDto[]>(`/api/testcase/${testCaseId}/cfv`);
-}
-
-/** Extract step bodies from normalized scenario. */
 function extractStepsFromScenario(scenario: NormalizedScenarioDto): string[] {
   if (!scenario.scenarioSteps || !scenario.root?.children) {
     return [];
@@ -41,14 +30,13 @@ function extractStepsFromScenario(scenario: NormalizedScenarioDto): string[] {
 
   return scenario.root.children.flatMap((stepId) => {
     const step = scenarioSteps[stepId];
-
     return step?.body ? [step.body] : [];
   });
 }
 
-/** Get test case detail with steps and custom fields (parallel fetches). */
 export const getTestCaseDetail = async (
-  id: number
+  id: number,
+  projectId?: number
 ): Promise<Result<TestCaseDetail, Error>> => {
   const testCaseResult = await apiGet<TestCaseDto>(`/api/testcase/${id}`);
 
@@ -57,11 +45,21 @@ export const getTestCaseDetail = async (
   }
 
   const testCase = testCaseResult.value;
+  const effectiveProjectId = projectId ?? testCase.projectId;
 
-  // Fetch additional data in parallel
+  if (!effectiveProjectId) {
+    return success({
+      ...testCase,
+      steps: [],
+      customFields: {},
+      tags: flattenTags(testCase),
+      owner: testCase.createdBy ?? '',
+    });
+  }
+
   const [scenarioResult, cfResult] = await Promise.all([
     getTestCaseScenario(id),
-    getTestCaseCustomFields(id),
+    getTestCaseCustomFields(id, effectiveProjectId),
   ]);
 
   const steps = isSuccess(scenarioResult)
@@ -91,57 +89,11 @@ export const getTestCaseDetail = async (
     ...testCase,
     steps,
     customFields,
-    tags: testCase.tags?.flatMap((t) => (t.name != null ? [t.name] : [])) ?? [],
+    tags: flattenTags(testCase),
     owner: testCase.createdBy ?? '',
   });
 };
 
-/** Update one scenario step by global step id. */
-export const updateScenarioStep = async (
-  stepId: number,
-  data: { body?: string; expectedResult?: string }
-): Promise<Result<NormalizedScenarioDto, Error>> => {
-  const body: Record<string, unknown> = {};
-  if (data.body !== undefined) body.body = data.body;
-  if (data.expectedResult !== undefined)
-    body.expectedResult = data.expectedResult;
-
-  return apiPatch<NormalizedScenarioDto>(`/api/testcase/step/${stepId}`, body, {
-    withExpectedResult: true,
-  });
-};
-
-/** Replace test case scenario with new steps. */
-export const setTestCaseScenario = async (
-  testCaseId: number,
-  steps: Array<{ action: string; expectedResult?: string }>
-): Promise<Result<NormalizedScenarioDto, Error>> => {
-  const scenarioData = {
-    steps: steps.map((s) => ({
-      action: s.action,
-      expectedResult: s.expectedResult ?? '',
-    })),
-  };
-
-  return apiPost<NormalizedScenarioDto>(
-    `/api/testcase/${testCaseId}/scenario`,
-    scenarioData
-  );
-};
-
-/** Update custom field values for a test case. */
-export const updateTestCaseCustomFields = async (
-  testCaseId: number,
-  fields: Array<{ customFieldId: number; valueIds: number[] }>
-): Promise<Result<void, Error>> => {
-  const result = await apiPatch<void>(
-    `/api/testcase/${testCaseId}/cfv`,
-    fields
-  );
-  return map(result, () => undefined);
-};
-
-/** Optional filters for listing test cases under a project tree node. */
 export interface ListTestCasesInTreeParams extends PageParams {
   parentNodeId?: number;
   search?: string;
@@ -150,7 +102,6 @@ export interface ListTestCasesInTreeParams extends PageParams {
   baseAql?: string;
 }
 
-/** List test cases under a project tree node (v2). */
 export const listTestCasesInTree = async (
   projectId: number,
   treeId: number,
@@ -177,7 +128,6 @@ export const listTestCasesInTree = async (
   );
 };
 
-/** Search test cases by AQL with pagination. */
 export const searchTestCasesByAQL = async (
   projectId: number,
   rql: string,
