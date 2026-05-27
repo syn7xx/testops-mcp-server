@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.3.0](https://github.com/syn7xx/testops-mcp-server/compare/v0.2.5...v0.3.0) (2026-05-27)
+
+
+### Features
+
+* **test-case:** create tool with steps, CFV, pagination ([546822c](https://github.com/syn7xx/testops-mcp-server/commit/546822cf6d4a0ca73376a83b844dfd6e1ad2ad0f))
+
 ## [0.2.5](https://github.com/syn7xx/testops-mcp-server/compare/v0.2.4...v0.2.5) (2026-04-21)
 
 
