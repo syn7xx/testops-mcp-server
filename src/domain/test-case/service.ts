@@ -3,6 +3,7 @@ import type { PageDto } from '@shared/openapi/common-dto.js';
 import type {
   CustomFieldWithValuesDto,
   NormalizedScenarioDto,
+  TestCaseCreateV2Dto,
   TestCaseDto,
   TestCaseFullTreeNodeDto,
 } from '@shared/openapi/test-case-dto.js';
@@ -116,16 +117,25 @@ export const setTestCaseScenario = async (
   testCaseId: number,
   steps: Array<{ action: string; expectedResult?: string }>
 ): Promise<Result<NormalizedScenarioDto, Error>> => {
-  const scenarioData = {
-    steps: steps.map((s) => ({
-      action: s.action,
-      expectedResult: s.expectedResult ?? '',
-    })),
-  };
+  const apiSteps: Array<{ type: string; body: string }> = [];
+
+  for (const step of steps) {
+    apiSteps.push({
+      type: 'body',
+      body: step.action,
+    });
+
+    if (step.expectedResult) {
+      apiSteps.push({
+        type: 'expectedBody',
+        body: step.expectedResult,
+      });
+    }
+  }
 
   return apiPost<NormalizedScenarioDto>(
     `/api/testcase/${testCaseId}/scenario`,
-    scenarioData
+    { steps: apiSteps }
   );
 };
 
@@ -203,4 +213,66 @@ export const searchTestCasesByAQL = async (
     page: data.number ?? page,
     size: data.size ?? size,
   }));
+};
+
+/** Create a new test case. */
+export const createTestCase = async (
+  data: TestCaseCreateV2Dto
+): Promise<Result<TestCaseDto, Error>> => {
+  return apiPost<TestCaseDto>('/api/testcase', data);
+};
+
+/** Create scenario step with optional expected result. */
+export const createScenarioStep = async (
+  testCaseId: number,
+  body: string,
+  expectedResult?: string,
+  afterStepId?: number
+): Promise<Result<NormalizedScenarioDto, Error>> => {
+  interface ScenarioStepCreatedResponseDto {
+    createdStepId: number;
+    scenario: NormalizedScenarioDto;
+  }
+
+  const stepData = {
+    testCaseId,
+    body,
+  };
+
+  const queryParams: Record<string, boolean | number> = {};
+
+  if (afterStepId) {
+    queryParams.afterId = afterStepId;
+  }
+
+  const result = await apiPost<ScenarioStepCreatedResponseDto>(
+    '/api/testcase/step',
+    stepData,
+    queryParams
+  );
+
+  if (!isSuccess(result)) {
+    return { ok: false, error: result.error };
+  }
+
+  let scenario = result.value.scenario;
+  const createdStepId = result.value.createdStepId;
+
+  if (expectedResult) {
+    const erResult = await apiPost<ScenarioStepCreatedResponseDto>(
+      '/api/testcase/step',
+      {
+        testCaseId,
+        parentId: createdStepId,
+        body: expectedResult,
+      },
+      {}
+    );
+
+    if (isSuccess(erResult)) {
+      scenario = erResult.value.scenario;
+    }
+  }
+
+  return success(scenario);
 };

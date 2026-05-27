@@ -11,7 +11,14 @@ import {
   updateTestCaseCustomFields,
   searchTestCasesByAQL,
   listTestCasesInTree,
+  createTestCase,
+  createScenarioStep,
 } from '@domain/test-case/index.js';
+
+function normalizeLineBreaks(text: string | undefined): string | undefined {
+  if (!text) return text;
+  return text.replace(/\\n/g, '\n');
+}
 
 const testCaseIdOnly = z.object({
   id: z.number().describe('Allure test case ID (same as in TestOps UI / URL)'),
@@ -348,6 +355,174 @@ export const registerTestCaseTools = (server: McpServer) => {
               null,
               2
             ),
+          },
+        ],
+      };
+    }
+  );
+
+  server.registerTool(
+    'testcase_create',
+    {
+      title: 'Create Test Case',
+      description:
+        'Create a new test case in TestOps. Required: name and projectId. Optional: description, automated, tags, scenario steps, customFields, etc.',
+      inputSchema: z.object({
+        name: z.string().describe('Test case name (required)'),
+        projectId: z.number().describe('Project ID (required)'),
+        description: z.string().optional().describe('Test case description'),
+        automated: z.boolean().optional().describe('Is automated test case'),
+        external: z.boolean().optional().describe('Is external test case'),
+        fullName: z.string().optional().describe('Full qualified name'),
+        precondition: z
+          .string()
+          .optional()
+          .describe('Precondition text (use \\n for line breaks)'),
+        postcondition: z
+          .string()
+          .optional()
+          .describe('Postcondition text (use \\n for line breaks)'),
+        expectedResult: z.string().optional().describe('Expected result'),
+        statusId: z.number().optional().describe('Status ID'),
+        testLayerId: z.number().optional().describe('Test layer ID'),
+        workflowId: z.number().optional().describe('Workflow ID'),
+        tags: z
+          .array(z.object({ name: z.string() }))
+          .optional()
+          .describe('Tags to attach'),
+        steps: z
+          .array(
+            z.object({
+              action: z.string().describe('Step action text'),
+              expectedResult: z
+                .string()
+                .optional()
+                .describe('Expected result for this step'),
+            })
+          )
+          .optional()
+          .describe('Scenario steps'),
+        customFields: z
+          .array(
+            z.object({
+              id: z.number().optional().describe('Custom field value ID'),
+              name: z.string().optional().describe('Custom field value name'),
+              customFieldId: z
+                .number()
+                .optional()
+                .describe('Custom field definition ID'),
+            })
+          )
+          .optional()
+          .describe('Custom field values'),
+        links: z
+          .array(
+            z.object({
+              name: z.string().optional(),
+              type: z.string().optional(),
+              url: z.string().optional(),
+            })
+          )
+          .optional()
+          .describe('External links'),
+        members: z
+          .array(z.object({ id: z.number() }))
+          .optional()
+          .describe('Team members'),
+      }),
+    },
+    async (args) => {
+      const createData: {
+        name: string;
+        projectId: number;
+        description?: string;
+        automated?: boolean;
+        external?: boolean;
+        fullName?: string;
+        precondition?: string;
+        postcondition?: string;
+        expectedResult?: string;
+        statusId?: number;
+        testLayerId?: number;
+        workflowId?: number;
+        tags?: Array<{ name: string }>;
+        customFields?: Array<{ id?: number; name?: string; customField?: { id: number } }>;
+        links?: Array<{ name?: string; type?: string; url?: string }>;
+        members?: Array<{ id?: number }>;
+      } = {
+        name: args.name,
+        projectId: args.projectId,
+      };
+
+      if (args.description !== undefined) createData.description = args.description;
+      if (args.automated !== undefined) createData.automated = args.automated;
+      if (args.external !== undefined) createData.external = args.external;
+      if (args.fullName !== undefined) createData.fullName = args.fullName;
+      if (args.precondition !== undefined) createData.precondition = normalizeLineBreaks(args.precondition);
+      if (args.postcondition !== undefined) createData.postcondition = normalizeLineBreaks(args.postcondition);
+      if (args.expectedResult !== undefined) createData.expectedResult = args.expectedResult;
+      if (args.statusId !== undefined) createData.statusId = args.statusId;
+      if (args.testLayerId !== undefined) createData.testLayerId = args.testLayerId;
+      if (args.workflowId !== undefined) createData.workflowId = args.workflowId;
+      if (args.tags !== undefined) createData.tags = args.tags;
+      if (args.links !== undefined) createData.links = args.links;
+      if (args.members !== undefined) createData.members = args.members;
+
+      if (args.customFields !== undefined) {
+        createData.customFields = args.customFields.map((cf) => ({
+          id: cf.id,
+          name: cf.name,
+          customField: cf.customFieldId
+            ? { id: cf.customFieldId, name: '' }
+            : undefined,
+        }));
+      }
+
+      const result = await createTestCase(createData);
+      if (!isSuccess(result)) {
+        return {
+          content: [{ type: 'text', text: `Error: ${result.error.message}` }],
+          isError: true,
+        };
+      }
+
+      const testCase = result.value;
+
+      if (args.steps && args.steps.length > 0 && testCase.id) {
+        let lastStepId: number | undefined;
+
+        for (const step of args.steps) {
+          const stepResult = await createScenarioStep(
+            testCase.id,
+            step.action,
+            step.expectedResult,
+            lastStepId
+          );
+
+          if (!isSuccess(stepResult)) {
+            return {
+              content: [
+                {
+                  type: 'text',
+                  text: `Test case created (id: ${testCase.id}), but failed to add step: ${stepResult.error.message}`,
+                },
+              ],
+              isError: true,
+            };
+          }
+
+          const scenario = stepResult.value;
+          if (scenario.root?.children?.length) {
+            lastStepId = scenario.root.children[scenario.root.children.length - 1];
+          }
+        }
+      }
+
+      return {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify(testCase, null, 2),
           },
         ],
       };

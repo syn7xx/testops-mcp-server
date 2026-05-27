@@ -40,8 +40,8 @@ export interface NormalizedScenarioDto {
 }
 
 export interface CustomFieldDto {
-  id: number;
-  name: string;
+  id?: number;
+  name?: string;
 }
 
 export interface CustomFieldValueDto {
@@ -72,4 +72,89 @@ export interface TestCaseFullTreeNodeDto {
   parentNodeId?: number;
   customFieldValueId?: number;
   children?: PageTestCaseTreeNodeDto;
+}
+
+export interface TextParagraphNode {
+  text: string;
+  marks?: unknown[];
+}
+
+export interface ParagraphDocumentNode {
+  type: 'paragraph';
+  content?: TextParagraphNode[];
+}
+
+export interface DefaultTextMarkupDocument {
+  type: 'doc';
+  content: ParagraphDocumentNode[];
+}
+
+export interface ScenarioStepDto {
+  type: string;
+}
+
+export interface BodyStepDto extends ScenarioStepDto {
+  type: 'body';
+  body?: string;
+  bodyJson?: DefaultTextMarkupDocument;
+  steps?: ExpectedBodyStepDto[];
+}
+
+export interface ExpectedBodyStepDto extends ScenarioStepDto {
+  type: 'expectedBody';
+  body?: string;
+  bodyJson?: DefaultTextMarkupDocument;
+}
+
+export interface AttachmentStepDto extends ScenarioStepDto {
+  type: 'attachment';
+  attachmentId: number;
+}
+
+export interface SharedStepStepDto extends ScenarioStepDto {
+  type: 'sharedStep';
+  sharedStepId: number;
+}
+
+export type TestCaseStepDto =
+  | BodyStepDto
+  | ExpectedBodyStepDto
+  | AttachmentStepDto
+  | SharedStepStepDto;
+
+export interface TestCaseScenarioV2Dto {
+  steps?: TestCaseStepDto[];
+}
+
+export interface CustomFieldValueWithCfDto {
+  id?: number;
+  name?: string;
+  global?: boolean;
+  customField?: CustomFieldDto;
+}
+
+export interface MemberDto {
+  id?: number;
+  name?: string;
+}
+
+export interface TestCaseCreateV2Dto {
+  name: string;
+  projectId: number;
+  description?: string;
+  automated?: boolean;
+  deleted?: boolean;
+  external?: boolean;
+  fullName?: string;
+  precondition?: string;
+  postcondition?: string;
+  expectedResult?: string;
+  statusId?: number;
+  testLayerId?: number;
+  workflowId?: number;
+  scenario?: TestCaseScenarioV2Dto;
+  tags?: TestTagDto[];
+  customFields?: CustomFieldValueWithCfDto[];
+  links?: ExternalLinkDto[];
+  members?: MemberDto[];
 }

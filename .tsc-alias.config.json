@@ -1,0 +1,18 @@
+{
+  "resolveFullPaths": true,
+  "verbose": false,
+  "replacers": [
+    {
+      "alias": "@shared/",
+      "replace": "./dist/shared/"
+    },
+    {
+      "alias": "@domain/",
+      "replace": "./dist/domain/"
+    },
+    {
+      "alias": "@presentation/",
+      "replace": "./dist/presentation/"
+    }
+  ]
+}
