@@ -13,7 +13,7 @@ const __dirname = path.dirname(__filename);
 const compat = new FlatCompat({ baseDirectory: __dirname });
 
 export default [
-  { ignores: ['dist/**', 'node_modules/**'] },
+  { ignores: ['dist/**', 'node_modules/**', 'coverage/**'] },
   ...compat.extends('airbnb-base'),
   eslintConfigPrettier,
   ...tseslint.configs.recommended,
@@ -46,6 +46,13 @@ export default [
 
       // Prefer stability over style-only refactors in existing code.
       'import/prefer-default-export': 'off',
+    },
+  },
+  {
+    // Tests and config files may use devDependencies.
+    files: ['tests/**/*.ts', 'vitest.config.ts'],
+    rules: {
+      'import/no-extraneous-dependencies': ['error', { devDependencies: true }],
     },
   },
   eslintPluginPrettierRecommended,
