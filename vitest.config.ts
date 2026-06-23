@@ -1,0 +1,26 @@
+import { defineConfig } from 'vitest/config';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const projectRoot = path.dirname(fileURLToPath(import.meta.url));
+
+export default defineConfig({
+  test: {
+    globals: true,
+    environment: 'node',
+    include: ['tests/**/*.test.ts'],
+    coverage: {
+      provider: 'v8',
+      include: ['src/**/*.ts'],
+      exclude: ['src/index.ts', 'src/shared/openapi/**'],
+    },
+  },
+  resolve: {
+    alias: {
+      '~': path.resolve(projectRoot, 'src'),
+      '@shared': path.resolve(projectRoot, 'src/shared'),
+      '@domain': path.resolve(projectRoot, 'src/domain'),
+      '@presentation': path.resolve(projectRoot, 'src/presentation'),
+    },
+  },
+});
