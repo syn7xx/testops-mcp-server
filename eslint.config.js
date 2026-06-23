@@ -1,5 +1,6 @@
 /* eslint-disable no-underscore-dangle */
 /* eslint-disable import/no-extraneous-dependencies */
+import eslintConfigPrettier from 'eslint-config-prettier/flat';
 import eslintPluginPrettierRecommended from 'eslint-plugin-prettier/recommended';
 import globals from 'globals';
 import tseslint from 'typescript-eslint';
@@ -13,7 +14,8 @@ const compat = new FlatCompat({ baseDirectory: __dirname });
 
 export default [
   { ignores: ['dist/**', 'node_modules/**'] },
-  ...compat.extends('airbnb-base', 'prettier'),
+  ...compat.extends('airbnb-base'),
+  eslintConfigPrettier,
   ...tseslint.configs.recommended,
   {
     languageOptions: {
