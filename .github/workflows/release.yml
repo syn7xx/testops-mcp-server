@@ -35,7 +35,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: '24'
           registry-url: 'https://registry.npmjs.org'
 
       - name: Install dependencies
@@ -47,7 +47,7 @@ jobs:
       - name: Type-check
         run: npx tsc --noEmit
 
-      - name: Run tests
+      - name: Test
         run: npm run test -- --coverage
 
       - name: Configure Git
