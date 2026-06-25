@@ -1,5 +1,11 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { apiGet, apiPost } from '@shared/api.js';
+import {
+  apiGet,
+  apiPost,
+  apiFetch,
+  clearJwtCache,
+  initApiClient,
+} from '@shared/api.js';
 import { isSuccess } from '@shared/result.js';
 import {
   setupFetchMock,
@@ -115,5 +121,68 @@ describe('API Client', () => {
       method: 'POST',
       body: JSON.stringify({ name: 'My Launch' }),
     });
+  });
+
+  it('handles body read failure gracefully', async () => {
+    mockJwtResponse(mockFetch);
+    mockFetch.mockResolvedValueOnce({
+      ok: false,
+      status: 500,
+      statusText: 'Error',
+      text: async () => {
+        throw new Error('Body read failed');
+      },
+    });
+
+    const result = await apiGet('/api/test');
+    expect(isSuccess(result)).toBe(false);
+    if (!isSuccess(result)) {
+      expect(result.error.message).toContain('500');
+      expect(result.error.message).toContain('Error');
+    }
+  });
+
+  it('returns failure when API client not initialized', async () => {
+    clearJwtCache();
+    initApiClient('', '');
+    const freshMock = setupFetchMock();
+    freshMock.mockResolvedValueOnce(mockApiResponse({ access_token: 'jwt' }));
+
+    const result = await apiGet('/api/test');
+    expect(isSuccess(result)).toBe(false);
+    if (!isSuccess(result)) {
+      expect(result.error.message).toContain('not initialized');
+    }
+  });
+
+  it('wraps network fetch errors', async () => {
+    mockJwtResponse(mockFetch);
+    mockFetch.mockRejectedValueOnce(new Error('ECONNREFUSED'));
+
+    const result = await apiGet('/api/test');
+    expect(isSuccess(result)).toBe(false);
+    if (!isSuccess(result)) {
+      expect(result.error.message).toContain('ECONNREFUSED');
+    }
+  });
+
+  it('apiFetch handles query params with arrays and undefined values', async () => {
+    mockJwtResponse(mockFetch);
+    mockFetch.mockResolvedValueOnce(mockApiResponse({ ok: true }));
+
+    const result = await apiFetch('/api/test', {
+      method: 'GET',
+      queryParams: {
+        tags: ['a', 'b'],
+        empty: undefined,
+        page: 1,
+      },
+    });
+    expect(isSuccess(result)).toBe(true);
+
+    const url = new URL(mockFetch.mock.calls[1][0] as string);
+    expect(url.searchParams.getAll('tags')).toEqual(['a', 'b']);
+    expect(url.searchParams.get('page')).toBe('1');
+    expect(url.searchParams.has('empty')).toBe(false);
   });
 });

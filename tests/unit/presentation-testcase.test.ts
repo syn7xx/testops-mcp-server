@@ -303,6 +303,26 @@ describe('Presentation — Test Case Write Tools', () => {
     expect(result.content[0].text).toContain('Step failed');
   });
 
+  it('testcase_create with multiple steps — second step fails', async () => {
+    vi.mocked(tcSvc.createTestCase).mockResolvedValue(
+      success({ id: 8, name: 'MultiStep' })
+    );
+    vi.mocked(tcSvc.createScenarioStep)
+      .mockResolvedValueOnce(success({ root: { children: [100] } }))
+      .mockResolvedValueOnce(failure(new Error('Second step failed')));
+
+    const server = setupToolTest([registerWriteTools]);
+    const handler = getToolHandler(server, 'testcase_create');
+    const result = await handler({
+      name: 'MultiStep',
+      projectId: 10,
+      steps: [{ action: 'Step 1' }, { action: 'Step 2' }],
+    });
+
+    expect(result.isError).toBe(true);
+    expect(result.content[0].text).toContain('Second step failed');
+  });
+
   it('testcase_create with customFields using customFieldId+valueIds', async () => {
     vi.mocked(tcSvc.createTestCase).mockResolvedValue(
       success({ id: 42, name: 'CF TC' })

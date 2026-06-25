@@ -107,6 +107,70 @@ describe('Domain — Test Case Service', () => {
         expect(result.value.owner).toBe('dev');
       }
     });
+
+    it('returns failure when main API call fails', async () => {
+      mockJwtResponse(fetchMock);
+      fetchMock.mockResolvedValueOnce(mockApiResponse('Not found', 404));
+
+      const result = await getTestCaseDetail(999);
+      expect(isSuccess(result)).toBe(false);
+      if (!isSuccess(result)) {
+        expect(result.error.message).toContain('404');
+      }
+    });
+
+    it('handles scenario without scenarioSteps gracefully', async () => {
+      mockJwtResponse(fetchMock);
+      fetchMock.mockResolvedValueOnce(
+        mockApiResponse({
+          id: 1,
+          name: 'TC-NoSteps',
+          createdBy: 'dev',
+          projectId: 10,
+          tags: [],
+        })
+      );
+      // Scenario without scenarioSteps
+      fetchMock.mockResolvedValueOnce(
+        mockApiResponse({ root: { children: [] } })
+      );
+      // Custom fields
+      fetchMock.mockResolvedValueOnce(mockApiResponse([]));
+
+      const result = await getTestCaseDetail(1, 10);
+      expect(isSuccess(result)).toBe(true);
+      if (isSuccess(result)) {
+        expect(result.value.steps).toEqual([]);
+      }
+    });
+
+    it('skips custom fields with no name or empty values', async () => {
+      mockJwtResponse(fetchMock);
+      fetchMock.mockResolvedValueOnce(
+        mockApiResponse({
+          id: 1,
+          name: 'TC',
+          createdBy: 'dev',
+          projectId: 10,
+        })
+      );
+      fetchMock.mockResolvedValueOnce(
+        mockApiResponse({ root: { children: [] } })
+      );
+      fetchMock.mockResolvedValueOnce(
+        mockApiResponse([
+          { customField: { id: 1 }, values: [{ name: 'Val' }] },
+          { customField: { name: 'HasName' }, values: [] },
+          { customField: { name: 'Good' }, values: [{ name: 'V1' }] },
+        ])
+      );
+
+      const result = await getTestCaseDetail(1, 10);
+      expect(isSuccess(result)).toBe(true);
+      if (isSuccess(result)) {
+        expect(result.value.customFields).toEqual({ Good: 'V1' });
+      }
+    });
   });
 
   describe('getTestCaseScenario', () => {
@@ -242,6 +306,14 @@ describe('Domain — Test Case Service', () => {
         expect(result.value.items).toHaveLength(1);
       }
     });
+
+    it('returns failure on API error', async () => {
+      mockJwtResponse(fetchMock);
+      fetchMock.mockResolvedValueOnce(mockApiResponse('error', 500));
+
+      const result = await getProjectCustomFieldValues(10, 5);
+      expect(isSuccess(result)).toBe(false);
+    });
   });
 
   describe('updateScenarioStep', () => {
@@ -285,6 +357,19 @@ describe('Domain — Test Case Service', () => {
       expect(isSuccess(result)).toBe(true);
     });
 
+    it('creates step with afterStepId', async () => {
+      mockJwtResponse(fetchMock);
+      fetchMock.mockResolvedValueOnce(
+        mockApiResponse({
+          createdStepId: 100,
+          scenario: { root: { children: [100] } },
+        })
+      );
+
+      const result = await createScenarioStep(1, 'New step', undefined, 50);
+      expect(isSuccess(result)).toBe(true);
+    });
+
     it('creates step with expected result', async () => {
       mockJwtResponse(fetchMock);
       // First POST: create step
@@ -304,6 +389,37 @@ describe('Domain — Test Case Service', () => {
 
       const result = await createScenarioStep(1, 'Action', 'Expected');
       expect(isSuccess(result)).toBe(true);
+    });
+
+    it('returns failure when step creation API fails', async () => {
+      mockJwtResponse(fetchMock);
+      fetchMock.mockResolvedValueOnce(mockApiResponse('error', 500));
+
+      const result = await createScenarioStep(1, 'Bad step');
+      expect(isSuccess(result)).toBe(false);
+      if (!isSuccess(result)) {
+        expect(result.error.message).toContain('500');
+      }
+    });
+
+    it('returns initial scenario when expected-result step fails', async () => {
+      mockJwtResponse(fetchMock);
+      // First POST: create step succeeds
+      fetchMock.mockResolvedValueOnce(
+        mockApiResponse({
+          createdStepId: 100,
+          scenario: { root: { children: [100] } },
+        })
+      );
+      // Second POST: expected result step fails
+      fetchMock.mockResolvedValueOnce(mockApiResponse('error', 500));
+
+      const result = await createScenarioStep(1, 'Action', 'Expected');
+      expect(isSuccess(result)).toBe(true);
+      if (isSuccess(result)) {
+        expect(result.value.root).toBeDefined();
+        expect(result.value.root!.children).toEqual([100]);
+      }
     });
   });
 });

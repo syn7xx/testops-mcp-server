@@ -72,6 +72,19 @@ describe('Presentation — Project Tools', () => {
     expect(result.content[0].text).toContain('not found');
   });
 
+  it('project_find_by_name returns error on API failure', async () => {
+    vi.mocked(projectSvc.findProjectByName).mockResolvedValue(
+      failure(new Error('Network error'))
+    );
+
+    const server = setupToolTest([registerProjectTools]);
+    const handler = getToolHandler(server, 'project_find_by_name');
+    const result = await handler({ name: 'Anything' });
+
+    expect(result.isError).toBe(true);
+    expect(result.content[0].text).toContain('Network error');
+  });
+
   it('project_get_by_id fetches project', async () => {
     vi.mocked(projectSvc.getProjectById).mockResolvedValue(
       success({ id: 1, name: 'P' })

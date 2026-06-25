@@ -50,6 +50,19 @@ describe('MCP Server E2E', () => {
       expect(toolNames).toContain('testplan_get_test_cases');
       expect(toolNames).toContain('testplan_run');
       expect(toolNames).toContain('testplan_sync');
+      expect(toolNames).toContain('testcase_get');
+      expect(toolNames).toContain('testcase_get_detail');
+      expect(toolNames).toContain('testcase_get_scenario');
+      expect(toolNames).toContain('testcase_get_step');
+      expect(toolNames).toContain('testcase_get_custom_fields');
+      expect(toolNames).toContain('testcase_list_in_tree');
+      expect(toolNames).toContain('testcase_search_by_aql');
+      expect(toolNames).toContain('testcase_update_step');
+      expect(toolNames).toContain('testcase_set_scenario');
+      expect(toolNames).toContain('testcase_update_custom_fields');
+      expect(toolNames).toContain('testcase_create');
+      expect(toolNames).toContain('project_get_custom_fields');
+      expect(toolNames).toContain('project_get_custom_field_values');
     });
 
     it('each tool has the required structure', async () => {
