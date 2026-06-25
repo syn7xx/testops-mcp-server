@@ -1,0 +1,3 @@
+npx tsc --project tsconfig.json --noEmit
+npx eslint 'src/**/*.ts' 'tests/**/*.ts'
+npx vitest run
