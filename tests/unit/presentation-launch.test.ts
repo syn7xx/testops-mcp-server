@@ -87,6 +87,35 @@ describe('Presentation — Launch Tools', () => {
     expect(parsed.progress.ready).toBe(true);
   });
 
+  it('launch_get_statistic returns error when statistic fails', async () => {
+    vi.mocked(launchSvc.getLaunchStatistic).mockResolvedValue(
+      failure(new Error('Launch not found'))
+    );
+
+    const server = setupToolTest([registerLaunchTools]);
+    const handler = getToolHandler(server, 'launch_get_statistic');
+    const result = await handler({ launchId: 999 });
+
+    expect(result.isError).toBe(true);
+    expect(result.content[0].text).toContain('Launch not found');
+  });
+
+  it('launch_get_statistic returns error when progress fails', async () => {
+    vi.mocked(launchSvc.getLaunchStatistic).mockResolvedValue(
+      success([{ status: 'PASSED', count: 1 }])
+    );
+    vi.mocked(launchSvc.getLaunchProgress).mockResolvedValue(
+      failure(new Error('Progress unavailable'))
+    );
+
+    const server = setupToolTest([registerLaunchTools]);
+    const handler = getToolHandler(server, 'launch_get_statistic');
+    const result = await handler({ launchId: 1 });
+
+    expect(result.isError).toBe(true);
+    expect(result.content[0].text).toContain('Progress unavailable');
+  });
+
   it('launch_list_test_results returns paged results', async () => {
     vi.mocked(launchSvc.getLaunchTestResultsFlat).mockResolvedValue(
       success({ content: [{ id: 1 }], totalElements: 1 })
