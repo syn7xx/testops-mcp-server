@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.4.0](https://github.com/syn7xx/testops-mcp-server/compare/v0.3.2...v0.4.0) (2026-06-27)
+
+
+### Features
+
+* add 7 new tools for launch, testplan, testcase, and project ([a566d2c](https://github.com/syn7xx/testops-mcp-server/commit/a566d2c671784f35ce07cb114f80e1b3fe8d4908))
+
 ## [0.3.2](https://github.com/syn7xx/testops-mcp-server/compare/v0.3.1...v0.3.2) (2026-06-27)
 
 
