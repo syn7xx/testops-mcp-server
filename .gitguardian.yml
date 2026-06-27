@@ -1,0 +1,11 @@
+secret:
+  show-secrets: false
+  exit-code: 1
+
+paths-ignore:
+  - 'CHANGELOG.md'
+  - '*.test.ts'
+  - 'tests/**'
+  - 'coverage/**'
+  - 'dist/**'
+  - 'package-lock.json'

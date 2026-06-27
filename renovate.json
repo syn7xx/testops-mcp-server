@@ -1,0 +1,42 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended",
+    ":disableRateLimiting",
+    ":semanticCommits"
+  ],
+  "rangeStrategy": "auto",
+  "packageRules": [
+    {
+      "description": "Group all non-major devDependencies together",
+      "matchDepTypes": ["devDependencies"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "groupName": "devDependencies (non-major)",
+      "automerge": true
+    },
+    {
+      "description": "Patch updates for dependencies can be auto-merged",
+      "matchDepTypes": ["dependencies"],
+      "matchUpdateTypes": ["patch"],
+      "groupName": "dependencies (patch)",
+      "automerge": true
+    },
+    {
+      "description": "Major devDependencies — don't automerge, review manually",
+      "matchDepTypes": ["devDependencies"],
+      "matchUpdateTypes": ["major"],
+      "groupName": "devDependencies (major)"
+    },
+    {
+      "description": "Separate MCP SDK updates — can have breaking changes",
+      "matchPackageNames": ["/^@modelcontextprotocol//"],
+      "groupName": "MCP SDK"
+    },
+    {
+      "description": "Separate ESLint updates — can require config changes",
+      "matchPackageNames": ["/eslint/", "/typescript-eslint/"],
+      "groupName": "ESLint"
+    }
+  ],
+  "timezone": "Europe/Moscow"
+}
