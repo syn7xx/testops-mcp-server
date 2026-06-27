@@ -17,7 +17,6 @@ type ToolHandlerFn = (args: unknown) => Promise<{
   isError?: boolean;
 }>;
 
-// eslint-disable-next-line no-underscore-dangle
 type ServerInternals = {
   _registeredTools: Record<string, { handler: ToolHandlerFn }>;
 };
@@ -28,7 +27,6 @@ export function getToolHandler(
   toolName: string
 ): ToolHandlerFn {
   const internals = server as unknown as ServerInternals;
-  // eslint-disable-next-line no-underscore-dangle
   const tool = internals._registeredTools[toolName];
   if (!tool) throw new Error(`Tool ${toolName} not registered`);
   return tool.handler;

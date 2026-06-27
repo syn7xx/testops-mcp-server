@@ -104,10 +104,7 @@ export interface SharedStepStepDto {
 }
 
 export type TestCaseStepDto =
-  | BodyStepDto
-  | ExpectedBodyStepDto
-  | AttachmentStepDto
-  | SharedStepStepDto;
+  BodyStepDto | ExpectedBodyStepDto | AttachmentStepDto | SharedStepStepDto;
 
 export interface TestCaseScenarioV2Dto {
   steps?: TestCaseStepDto[];

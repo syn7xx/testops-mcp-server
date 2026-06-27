@@ -1,33 +1,18 @@
-/* eslint-disable no-underscore-dangle */
-/* eslint-disable import/no-extraneous-dependencies */
 import eslintConfigPrettier from 'eslint-config-prettier/flat';
 import eslintPluginPrettierRecommended from 'eslint-plugin-prettier/recommended';
 import globals from 'globals';
 import tseslint from 'typescript-eslint';
-import { FlatCompat } from '@eslint/eslintrc';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const compat = new FlatCompat({ baseDirectory: __dirname });
+import js from '@eslint/js';
 
 export default [
   { ignores: ['dist/**', 'node_modules/**', 'coverage/**'] },
-  ...compat.extends('airbnb-base'),
+  js.configs.recommended,
   eslintConfigPrettier,
   ...tseslint.configs.recommended,
   {
     languageOptions: {
       globals: {
         ...globals.node,
-      },
-    },
-    settings: {
-      'import/resolver': {
-        typescript: {
-          project: './tsconfig.json',
-        },
       },
     },
     rules: {
@@ -37,23 +22,12 @@ export default [
   {
     files: ['**/*.ts'],
     rules: {
-      // Project uses ESM-style ".js" specifiers in TS sources (emitted JS keeps them).
-      'import/no-unresolved': 'off',
-      'import/extensions': 'off',
-
-      // CLI/server logs are intentional.
       'no-console': 'off',
-
-      // Prefer stability over style-only refactors in existing code.
-      'import/prefer-default-export': 'off',
     },
   },
   {
-    // Tests and config files may use devDependencies.
-    files: ['tests/**/*.ts', 'vitest.config.ts'],
-    rules: {
-      'import/no-extraneous-dependencies': ['error', { devDependencies: true }],
-    },
+    files: ['tests/**/*.ts', 'vitest.config.ts', 'eslint.config.js'],
+    rules: {},
   },
   eslintPluginPrettierRecommended,
 ];
