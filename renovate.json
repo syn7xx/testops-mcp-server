@@ -1,28 +1,22 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": [
-    "config:recommended",
-    ":disableRateLimiting",
-    ":semanticCommits"
-  ],
+  "extends": ["config:recommended", ":disableRateLimiting", ":semanticCommits"],
   "rangeStrategy": "auto",
   "packageRules": [
     {
       "description": "Group all non-major devDependencies together",
       "matchDepTypes": ["devDependencies"],
       "matchUpdateTypes": ["minor", "patch"],
-      "groupName": "devDependencies (non-major)",
-      "automerge": true
+      "groupName": "devDependencies (non-major)"
     },
     {
-      "description": "Patch updates for dependencies can be auto-merged",
+      "description": "Patch updates for dependencies",
       "matchDepTypes": ["dependencies"],
       "matchUpdateTypes": ["patch"],
-      "groupName": "dependencies (patch)",
-      "automerge": true
+      "groupName": "dependencies (patch)"
     },
     {
-      "description": "Major devDependencies — don't automerge, review manually",
+      "description": "Major devDependencies",
       "matchDepTypes": ["devDependencies"],
       "matchUpdateTypes": ["major"],
       "groupName": "devDependencies (major)"
