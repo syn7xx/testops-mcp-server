@@ -7,6 +7,7 @@ import {
   listTestCasesInTree,
   searchTestCasesByAQL,
   createTestCase,
+  updateTestCase,
   updateTestCaseCustomFields,
   getProjectCustomFields,
   getProjectCustomFieldValues,
@@ -249,6 +250,49 @@ describe('Domain — Test Case Service', () => {
       if (isSuccess(result)) {
         expect(result.value.id).toBe(99);
       }
+    });
+  });
+
+  describe('updateTestCase', () => {
+    it('updates test case metadata', async () => {
+      mockJwtResponse(fetchMock);
+      fetchMock.mockResolvedValueOnce(
+        mockApiResponse({ id: 1, name: 'Updated Name', automated: true })
+      );
+
+      const result = await updateTestCase(1, {
+        name: 'Updated Name',
+        automated: true,
+        tags: [{ name: 'smoke' }],
+      });
+      expect(isSuccess(result)).toBe(true);
+      if (isSuccess(result)) {
+        expect(result.value.name).toBe('Updated Name');
+        expect(result.value.automated).toBe(true);
+      }
+    });
+
+    it('updates with links only', async () => {
+      mockJwtResponse(fetchMock);
+      fetchMock.mockResolvedValueOnce(
+        mockApiResponse({ id: 5, name: 'Original' })
+      );
+
+      const result = await updateTestCase(5, {
+        links: [{ name: 'JIRA', url: 'https://jira.example.com/ISS-1' }],
+      });
+      expect(isSuccess(result)).toBe(true);
+      if (isSuccess(result)) {
+        expect(result.value.id).toBe(5);
+      }
+    });
+
+    it('returns failure on API error', async () => {
+      mockJwtResponse(fetchMock);
+      fetchMock.mockResolvedValueOnce(mockApiResponse('Not found', 404));
+
+      const result = await updateTestCase(999, { name: 'Ghost' });
+      expect(isSuccess(result)).toBe(false);
     });
   });
 

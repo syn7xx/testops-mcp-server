@@ -140,12 +140,15 @@ Or with environment variables:
 | `project_list` | List projects with pagination |
 | `project_find_by_name` | Find project by exact or partial name match |
 | `project_get_by_id` | Get project by ID |
+| `project_get_test_case_trees` | Get test case trees for a project |
 
 ### Launches
 
 | Tool | Description |
 |---|---|
-| `launch_create` | Create a test launch |
+| `launch_list` | List launches for a project with pagination |
+| `launch_get` | Get a launch by ID |
+| `launch_create` | Create a test launch (with envVarValueSets support) |
 | `launch_stop` | Stop a running launch |
 | `launch_get_statistic` | Launch summary: counts by status + progress |
 | `launch_list_test_results` | Flat paginated test results for a launch |
@@ -154,7 +157,9 @@ Or with environment variables:
 
 | Tool | Description |
 |---|---|
+| `testplan_list` | List test plans for a project with pagination |
 | `testplan_get` | Get test plan by ID |
+| `testplan_get_stat` | Test plan statistics: automated/manual counts and durations |
 | `testplan_get_test_cases` | Get test cases from a test plan |
 | `testplan_run` | Create a launch from a test plan |
 | `testplan_sync` | Sync test plan with its source |
@@ -168,6 +173,7 @@ Or with environment variables:
 | `testcase_get_scenario` | Full scenario JSON (steps + expected results) |
 | `testcase_get_step` | Same as `testcase_get_scenario` (alias) |
 | `testcase_get_custom_fields` | Get custom field values for a test case |
+| `testcase_update` | Update test case metadata (name, description, status, tags, etc.) |
 | `testcase_update_step` | Update a single scenario step |
 | `testcase_set_scenario` | Replace all steps in a scenario |
 | `testcase_update_custom_fields` | Set custom field values |

@@ -4,6 +4,8 @@ import type { LaunchCreateDto } from '@shared/openapi/launch-dto.js';
 import { omitUndefined } from '@shared/record-utils.js';
 import { isSuccess } from '@shared/result.js';
 import {
+  listLaunches,
+  getLaunch,
   createLaunch,
   getLaunchProgress,
   getLaunchStatistic,
@@ -18,6 +20,57 @@ const launchTagSchema = z.object({
 });
 
 export const registerLaunchTools = (server: McpServer) => {
+  server.registerTool(
+    'launch_list',
+    {
+      title: 'List Launches',
+      description: 'List launches for a project with pagination',
+      inputSchema: z.object({
+        projectId: z.number().describe('Project ID'),
+        page: z.number().optional().describe('Page number (zero-based)'),
+        size: z.number().optional().describe('Page size (max 100)'),
+        sort: z.string().optional().describe('Sort (e.g., "name,ASC")'),
+      }),
+    },
+    async (args: {
+      projectId: number;
+      page?: number;
+      size?: number;
+      sort?: string;
+    }) => {
+      const result = await listLaunches(args.projectId, args);
+      if (!isSuccess(result)) {
+        return handleResult(result);
+      }
+      const { items, page, size, totalElements, hasNext } = result.value;
+      return {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify(
+              { items, page, size, totalElements, hasNext },
+              null,
+              2
+            ),
+          },
+        ],
+      };
+    }
+  );
+
+  server.registerTool(
+    'launch_get',
+    {
+      title: 'Get Launch',
+      description: 'Get a launch by ID',
+      inputSchema: z.object({
+        launchId: z.number().describe('Launch ID'),
+      }),
+    },
+    async (args: { launchId: number }) =>
+      handleResult(await getLaunch(args.launchId))
+  );
+
   server.registerTool(
     'launch_create',
     {
@@ -34,6 +87,22 @@ export const registerLaunchTools = (server: McpServer) => {
           .array(launchTagSchema)
           .optional()
           .describe('Launch tags (id and/or name per tag)'),
+        envVarValueSets: z
+          .array(
+            z.object({
+              values: z
+                .array(
+                  z.object({
+                    id: z.number().optional(),
+                    name: z.string().optional(),
+                  })
+                )
+                .optional()
+                .describe('Variable values in this set'),
+            })
+          )
+          .optional()
+          .describe('Environment variable value sets'),
         extra: z
           .record(z.string(), z.unknown())
           .optional()
@@ -49,6 +118,9 @@ export const registerLaunchTools = (server: McpServer) => {
       external?: boolean;
       releaseId?: number;
       tags?: Array<{ id?: number; name?: string }>;
+      envVarValueSets?: Array<{
+        values?: Array<{ id?: number; name?: string }>;
+      }>;
       extra?: Record<string, unknown>;
     }) => {
       const body: LaunchCreateDto = {
@@ -59,6 +131,9 @@ export const registerLaunchTools = (server: McpServer) => {
           external: args.external,
           releaseId: args.releaseId,
           tags: args.tags?.length ? args.tags : undefined,
+          envVarValueSets: args.envVarValueSets?.length
+            ? args.envVarValueSets
+            : undefined,
           ...args.extra,
         }),
       };

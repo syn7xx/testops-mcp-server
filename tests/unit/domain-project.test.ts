@@ -3,6 +3,7 @@ import {
   findProjects,
   findProjectByName,
   getProjectById,
+  getProjectTestTrees,
 } from '@domain/project/index.js';
 import { isSuccess } from '@shared/result.js';
 import {
@@ -128,6 +129,45 @@ describe('Domain — Project Service', () => {
       fetchMock.mockResolvedValueOnce(mockApiResponse('Not found', 404));
 
       const result = await getProjectById(999);
+      expect(isSuccess(result)).toBe(false);
+    });
+  });
+
+  describe('getProjectTestTrees', () => {
+    it('returns list of test case trees', async () => {
+      mockJwtResponse(fetchMock);
+      fetchMock.mockResolvedValueOnce(
+        mockApiResponse([
+          { id: 1, name: 'Main Tree' },
+          { id: 2, name: 'Second Tree' },
+        ])
+      );
+
+      const result = await getProjectTestTrees(10);
+      expect(isSuccess(result)).toBe(true);
+      if (isSuccess(result)) {
+        expect(result.value).toHaveLength(2);
+        expect(result.value[0].id).toBe(1);
+        expect(result.value[0].name).toBe('Main Tree');
+      }
+    });
+
+    it('returns empty list when no trees', async () => {
+      mockJwtResponse(fetchMock);
+      fetchMock.mockResolvedValueOnce(mockApiResponse([]));
+
+      const result = await getProjectTestTrees(10);
+      expect(isSuccess(result)).toBe(true);
+      if (isSuccess(result)) {
+        expect(result.value).toEqual([]);
+      }
+    });
+
+    it('returns failure on API error', async () => {
+      mockJwtResponse(fetchMock);
+      fetchMock.mockResolvedValueOnce(mockApiResponse('Not found', 404));
+
+      const result = await getProjectTestTrees(999);
       expect(isSuccess(result)).toBe(false);
     });
   });

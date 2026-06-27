@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import {
+  listTestPlans,
   getTestPlan,
   getTestPlanTestCases,
   getTestPlanStat,
@@ -20,6 +21,52 @@ describe('Domain — Test Plan Service', () => {
   beforeEach(() => {
     fetchMock = setupFetchMock();
     initTestApiClient();
+  });
+
+  describe('listTestPlans', () => {
+    it('returns paginated test plans', async () => {
+      mockJwtResponse(fetchMock);
+      fetchMock.mockResolvedValueOnce(
+        mockApiResponse({
+          content: [
+            { id: 1, name: 'Plan A', projectId: 10 },
+            { id: 2, name: 'Plan B', projectId: 10 },
+          ],
+          totalElements: 2,
+          number: 0,
+          size: 50,
+        })
+      );
+
+      const result = await listTestPlans(10);
+      expect(isSuccess(result)).toBe(true);
+      if (isSuccess(result)) {
+        expect(result.value.items).toHaveLength(2);
+        expect(result.value.totalElements).toBe(2);
+        expect(result.value.hasNext).toBe(false);
+      }
+    });
+
+    it('handles empty test plan list', async () => {
+      mockJwtResponse(fetchMock);
+      fetchMock.mockResolvedValueOnce(
+        mockApiResponse({ content: [], totalElements: 0 })
+      );
+
+      const result = await listTestPlans(10);
+      expect(isSuccess(result)).toBe(true);
+      if (isSuccess(result)) {
+        expect(result.value.items).toHaveLength(0);
+      }
+    });
+
+    it('returns failure on API error', async () => {
+      mockJwtResponse(fetchMock);
+      fetchMock.mockResolvedValueOnce(mockApiResponse('error', 500));
+
+      const result = await listTestPlans(10);
+      expect(isSuccess(result)).toBe(false);
+    });
   });
 
   describe('getTestPlan', () => {
@@ -84,6 +131,14 @@ describe('Domain — Test Plan Service', () => {
 
       const result = await getTestPlanStat(1);
       expect(isSuccess(result)).toBe(true);
+    });
+
+    it('returns failure on error', async () => {
+      mockJwtResponse(fetchMock);
+      fetchMock.mockResolvedValueOnce(mockApiResponse('Not found', 404));
+
+      const result = await getTestPlanStat(999);
+      expect(isSuccess(result)).toBe(false);
     });
   });
 
