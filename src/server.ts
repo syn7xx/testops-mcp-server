@@ -1,5 +1,6 @@
 import { createRequire } from 'node:module';
-import { McpServer, StdioServerTransport } from '@modelcontextprotocol/server';
+import { McpServer } from '@modelcontextprotocol/server';
+import { StdioServerTransport } from '@modelcontextprotocol/server/stdio';
 import * as z from 'zod';
 import {
   registerProjectTools,

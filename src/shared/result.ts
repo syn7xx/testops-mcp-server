@@ -1,7 +1,6 @@
 /** Success or failure without throwing. */
 export type Result<T, E = Error> =
-  | { ok: true; value: T }
-  | { ok: false; error: E };
+  { ok: true; value: T } | { ok: false; error: E };
 
 /** Wrap value as success. */
 export const success = <T>(value: T): Result<T, never> => ({ ok: true, value });
