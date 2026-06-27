@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.3.2](https://github.com/syn7xx/testops-mcp-server/compare/v0.3.1...v0.3.2) (2026-06-27)
+
+
+### Reverts
+
+* remove Codecov and GitGuardian (unavailable in Russia) ([db58b21](https://github.com/syn7xx/testops-mcp-server/commit/db58b216e561c0a89f7d00b1276408386860b9af))
+
 ## [0.3.1](https://github.com/syn7xx/testops-mcp-server/compare/v0.3.0...v0.3.1) (2026-05-27)
 
 ## [0.3.0](https://github.com/syn7xx/testops-mcp-server/compare/v0.2.5...v0.3.0) (2026-05-27)
