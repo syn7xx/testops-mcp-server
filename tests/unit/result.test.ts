@@ -74,7 +74,6 @@ describe('Result ADT', () => {
 
     it('wraps non-Error throws', async () => {
       const r = await tryCatch(async () => {
-        // eslint-disable-next-line no-throw-literal
         throw 'string error';
       });
       expect(r.ok).toBe(false);
