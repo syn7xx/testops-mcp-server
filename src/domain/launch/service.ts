@@ -1,4 +1,5 @@
 import { apiGet, apiPost } from '@shared/api.js';
+import type { PageDto } from '@shared/openapi/common-dto.js';
 import type {
   LaunchCreateDto,
   LaunchDto,
@@ -6,8 +7,13 @@ import type {
   TestStatusCountDto,
 } from '@shared/openapi/launch-dto.js';
 import type { PageTestResultFlatDto } from '@shared/openapi/launch-test-result-dto.js';
-import { normalizePageParams, type PageParams } from '@shared/pagination.js';
-import type { Result } from '@shared/result.js';
+import {
+  createPaginated,
+  normalizePageParams,
+  type PageParams,
+  type Paginated,
+} from '@shared/pagination.js';
+import { type Result, map } from '@shared/result.js';
 
 export interface LaunchTestResultsFlatParams extends Omit<PageParams, 'sort'> {
   /** One or more sort criteria (repeated query keys). */
@@ -42,6 +48,37 @@ export const getLaunchProgress = async (
   launchId: number
 ): Promise<Result<LaunchProgressDto, Error>> => {
   return apiGet<LaunchProgressDto>(`/api/launch/${launchId}/progress`);
+};
+
+/** List launches for a project with pagination. */
+export const listLaunches = async (
+  projectId: number,
+  params?: PageParams
+): Promise<Result<Paginated<LaunchDto>, Error>> => {
+  const { page, size, sort } = normalizePageParams(params);
+
+  const response = await apiGet<PageDto<LaunchDto>>('/api/launch', {
+    projectId,
+    page,
+    size,
+    sort,
+  });
+
+  return map(response, (data) =>
+    createPaginated(
+      data.content ?? [],
+      data.number ?? page,
+      data.size ?? size,
+      data.totalElements
+    )
+  );
+};
+
+/** Get a launch by ID. */
+export const getLaunch = async (
+  id: number
+): Promise<Result<LaunchDto, Error>> => {
+  return apiGet<LaunchDto>(`/api/launch/${id}`);
 };
 
 /** Paged flat list of test results for a launch. */

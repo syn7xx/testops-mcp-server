@@ -8,6 +8,7 @@ vi.mock('@domain/project/index.js', () => ({
   findProjects: vi.fn(),
   findProjectByName: vi.fn(),
   getProjectById: vi.fn(),
+  getProjectTestTrees: vi.fn(),
 }));
 
 describe('Presentation — Project Tools', () => {
@@ -96,5 +97,36 @@ describe('Presentation — Project Tools', () => {
 
     const parsed = JSON.parse(result.content[0].text);
     expect(parsed.id).toBe(1);
+  });
+
+  it('project_get_test_case_trees returns trees', async () => {
+    vi.mocked(projectSvc.getProjectTestTrees).mockResolvedValue(
+      success([
+        { id: 1, name: 'Main Tree' },
+        { id: 2, name: 'Second Tree' },
+      ])
+    );
+
+    const server = setupToolTest([registerProjectTools]);
+    const handler = getToolHandler(server, 'project_get_test_case_trees');
+    const result = await handler({ projectId: 10 });
+
+    const parsed = JSON.parse(result.content[0].text);
+    expect(parsed).toHaveLength(2);
+    expect(parsed[0].id).toBe(1);
+    expect(parsed[0].name).toBe('Main Tree');
+  });
+
+  it('project_get_test_case_trees returns error on failure', async () => {
+    vi.mocked(projectSvc.getProjectTestTrees).mockResolvedValue(
+      failure(new Error('Project not found'))
+    );
+
+    const server = setupToolTest([registerProjectTools]);
+    const handler = getToolHandler(server, 'project_get_test_case_trees');
+    const result = await handler({ projectId: 999 });
+
+    expect(result.isError).toBe(true);
+    expect(result.content[0].text).toContain('Project not found');
   });
 });

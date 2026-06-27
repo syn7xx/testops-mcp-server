@@ -5,13 +5,50 @@ import { registerTestPlanTools } from '@presentation/test-plan/tools.js';
 import { setupToolTest, getToolHandler } from '../__test-utils__/tool-test.js';
 
 vi.mock('@domain/test-plan/index.js', () => ({
+  listTestPlans: vi.fn(),
   getTestPlan: vi.fn(),
+  getTestPlanStat: vi.fn(),
   getTestPlanTestCases: vi.fn(),
   runTestPlan: vi.fn(),
   syncTestPlan: vi.fn(),
 }));
 
 describe('Presentation — Test Plan Tools', () => {
+  it('testplan_list returns paginated plans', async () => {
+    vi.mocked(tpSvc.listTestPlans).mockResolvedValue(
+      success({
+        items: [{ id: 1, name: 'Plan A', projectId: 10 }],
+        page: 0,
+        size: 50,
+        totalElements: 2,
+        totalPages: 1,
+        hasNext: false,
+        hasPrevious: false,
+      })
+    );
+
+    const server = setupToolTest([registerTestPlanTools]);
+    const handler = getToolHandler(server, 'testplan_list');
+    const result = await handler({ projectId: 10 });
+
+    const parsed = JSON.parse(result.content[0].text);
+    expect(parsed.items).toHaveLength(1);
+    expect(parsed.totalElements).toBe(2);
+  });
+
+  it('testplan_list returns error on failure', async () => {
+    vi.mocked(tpSvc.listTestPlans).mockResolvedValue(
+      failure(new Error('Project not found'))
+    );
+
+    const server = setupToolTest([registerTestPlanTools]);
+    const handler = getToolHandler(server, 'testplan_list');
+    const result = await handler({ projectId: 999 });
+
+    expect(result.isError).toBe(true);
+    expect(result.content[0].text).toContain('Project not found');
+  });
+
   it('testplan_get returns test plan', async () => {
     vi.mocked(tpSvc.getTestPlan).mockResolvedValue(
       success({
@@ -28,6 +65,33 @@ describe('Presentation — Test Plan Tools', () => {
     const parsed = JSON.parse(result.content[0].text);
     expect(parsed.id).toBe(1);
     expect(parsed.name).toBe('Plan');
+  });
+
+  it('testplan_get_stat returns statistics', async () => {
+    vi.mocked(tpSvc.getTestPlanStat).mockResolvedValue(
+      success({ automated: 5, manual: 3 })
+    );
+
+    const server = setupToolTest([registerTestPlanTools]);
+    const handler = getToolHandler(server, 'testplan_get_stat');
+    const result = await handler({ id: 1 });
+
+    const parsed = JSON.parse(result.content[0].text);
+    expect(parsed.automated).toBe(5);
+    expect(parsed.manual).toBe(3);
+  });
+
+  it('testplan_get_stat returns error on failure', async () => {
+    vi.mocked(tpSvc.getTestPlanStat).mockResolvedValue(
+      failure(new Error('Test plan not found'))
+    );
+
+    const server = setupToolTest([registerTestPlanTools]);
+    const handler = getToolHandler(server, 'testplan_get_stat');
+    const result = await handler({ id: 999 });
+
+    expect(result.isError).toBe(true);
+    expect(result.content[0].text).toContain('Test plan not found');
   });
 
   it('testplan_get_test_cases returns paginated list', async () => {

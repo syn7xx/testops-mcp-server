@@ -5,6 +5,8 @@ import { registerLaunchTools } from '@presentation/launch/tools.js';
 import { setupToolTest, getToolHandler } from '../__test-utils__/tool-test.js';
 
 vi.mock('@domain/launch/index.js', () => ({
+  listLaunches: vi.fn(),
+  getLaunch: vi.fn(),
   createLaunch: vi.fn(),
   stopLaunch: vi.fn(),
   getLaunchStatistic: vi.fn(),
@@ -13,6 +15,67 @@ vi.mock('@domain/launch/index.js', () => ({
 }));
 
 describe('Presentation — Launch Tools', () => {
+  it('launch_list returns paginated launches', async () => {
+    vi.mocked(launchSvc.listLaunches).mockResolvedValue(
+      success({
+        items: [{ id: 1, name: 'Launch 1' }],
+        page: 0,
+        size: 50,
+        totalElements: 5,
+        totalPages: 1,
+        hasNext: false,
+        hasPrevious: false,
+      })
+    );
+
+    const server = setupToolTest([registerLaunchTools]);
+    const handler = getToolHandler(server, 'launch_list');
+    const result = await handler({ projectId: 10, page: 0, size: 50 });
+
+    const parsed = JSON.parse(result.content[0].text);
+    expect(parsed.items).toHaveLength(1);
+    expect(parsed.totalElements).toBe(5);
+  });
+
+  it('launch_list returns error on failure', async () => {
+    vi.mocked(launchSvc.listLaunches).mockResolvedValue(
+      failure(new Error('Project not found'))
+    );
+
+    const server = setupToolTest([registerLaunchTools]);
+    const handler = getToolHandler(server, 'launch_list');
+    const result = await handler({ projectId: 999 });
+
+    expect(result.isError).toBe(true);
+    expect(result.content[0].text).toContain('Project not found');
+  });
+
+  it('launch_get returns launch by ID', async () => {
+    vi.mocked(launchSvc.getLaunch).mockResolvedValue(
+      success({ id: 42, name: 'My Launch', projectId: 10 })
+    );
+
+    const server = setupToolTest([registerLaunchTools]);
+    const handler = getToolHandler(server, 'launch_get');
+    const result = await handler({ launchId: 42 });
+
+    const parsed = JSON.parse(result.content[0].text);
+    expect(parsed.id).toBe(42);
+    expect(parsed.name).toBe('My Launch');
+  });
+
+  it('launch_get returns error on failure', async () => {
+    vi.mocked(launchSvc.getLaunch).mockResolvedValue(
+      failure(new Error('Launch not found'))
+    );
+
+    const server = setupToolTest([registerLaunchTools]);
+    const handler = getToolHandler(server, 'launch_get');
+    const result = await handler({ launchId: 999 });
+
+    expect(result.isError).toBe(true);
+  });
+
   it('launch_create returns created launch', async () => {
     vi.mocked(launchSvc.createLaunch).mockResolvedValue(
       success({ id: 1, name: 'My Launch' })
@@ -44,6 +107,26 @@ describe('Presentation — Launch Tools', () => {
 
     const parsed = JSON.parse(result.content[0].text);
     expect(parsed.id).toBe(2);
+  });
+
+  it('launch_create with envVarValueSets includes them in body', async () => {
+    vi.mocked(launchSvc.createLaunch).mockResolvedValue(
+      success({ id: 3, name: 'Env Launch' })
+    );
+
+    const server = setupToolTest([registerLaunchTools]);
+    const handler = getToolHandler(server, 'launch_create');
+    await handler({
+      name: 'Env Launch',
+      projectId: 10,
+      envVarValueSets: [{ values: [{ id: 1, name: 'VAR1' }] }],
+    });
+
+    expect(launchSvc.createLaunch).toHaveBeenCalledWith(
+      expect.objectContaining({
+        envVarValueSets: [{ values: [{ id: 1, name: 'VAR1' }] }],
+      })
+    );
   });
 
   it('launch_stop returns ok with launchId', async () => {

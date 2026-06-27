@@ -30,10 +30,10 @@ src/
 │   └── openapi/              # API DTO type definitions (generated from OpenAPI)
 │
 ├── domain/                   # Business logic — call APIs, return Result<T>
-│   ├── project/service.ts    # findProjects, findProjectByName, getProjectById
-│   ├── launch/service.ts     # createLaunch, stopLaunch, getLaunch*, etc.
-│   ├── test-plan/service.ts  # getTestPlan, runTestPlan, syncTestPlan, etc.
-│   └── test-case/            # getTestCase, getTestCaseDetail, createTestCase,
+│   ├── project/service.ts    # findProjects, findProjectByName, getProjectById, getProjectTestTrees
+│   ├── launch/service.ts     # listLaunches, getLaunch, createLaunch, stopLaunch, getLaunch*, etc.
+│   ├── test-plan/service.ts  # listTestPlans, getTestPlan, getTestPlanStat, runTestPlan, syncTestPlan, etc.
+│   └── test-case/            # getTestCase, getTestCaseDetail, updateTestCase, createTestCase,
 │       ├── service.ts        #   listTestCasesInTree, searchTestCasesByAQL
 │       ├── scenario.ts       #   getTestCaseScenario, createScenarioStep, etc.
 │       ├── custom-fields.ts  #   getProjectCustomFields, updateTestCaseCustomFields

@@ -4,7 +4,9 @@ import type { TestPlanRunRequestDto } from '@shared/openapi/launch-dto.js';
 import { omitUndefined } from '@shared/record-utils.js';
 import { isSuccess } from '@shared/result.js';
 import {
+  listTestPlans,
   getTestPlan,
+  getTestPlanStat,
   getTestPlanTestCases,
   runTestPlan,
   syncTestPlan,
@@ -17,6 +19,44 @@ const launchTagSchema = z.object({
 });
 
 export const registerTestPlanTools = (server: McpServer) => {
+  server.registerTool(
+    'testplan_list',
+    {
+      title: 'List Test Plans',
+      description: 'List test plans for a project with pagination',
+      inputSchema: z.object({
+        projectId: z.number().describe('Project ID'),
+        page: z.number().optional().describe('Page number (zero-based)'),
+        size: z.number().optional().describe('Page size (max 100)'),
+        sort: z.string().optional().describe('Sort (e.g., "name,ASC")'),
+      }),
+    },
+    async (args: {
+      projectId: number;
+      page?: number;
+      size?: number;
+      sort?: string;
+    }) => {
+      const result = await listTestPlans(args.projectId, args);
+      if (!isSuccess(result)) {
+        return handleResult(result);
+      }
+      const { items, page, size, totalElements, hasNext } = result.value;
+      return {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify(
+              { items, page, size, totalElements, hasNext },
+              null,
+              2
+            ),
+          },
+        ],
+      };
+    }
+  );
+
   server.registerTool(
     'testplan_get',
     {
@@ -121,5 +161,18 @@ export const registerTestPlanTools = (server: McpServer) => {
       }),
     },
     async (args: { id: number }) => handleResult(await syncTestPlan(args.id))
+  );
+
+  server.registerTool(
+    'testplan_get_stat',
+    {
+      title: 'Get Test Plan Statistic',
+      description:
+        'Test plan statistics: automated/manual counts, durations. Useful before running to estimate effort.',
+      inputSchema: z.object({
+        id: z.number().describe('Test plan ID'),
+      }),
+    },
+    async (args: { id: number }) => handleResult(await getTestPlanStat(args.id))
   );
 };

@@ -15,6 +15,7 @@ vi.mock('@domain/test-case/index.js', () => ({
   listTestCasesInTree: vi.fn(),
   searchTestCasesByAQL: vi.fn(),
   createTestCase: vi.fn(),
+  updateTestCase: vi.fn(),
   createScenarioStep: vi.fn(),
   updateScenarioStep: vi.fn(),
   setTestCaseScenario: vi.fn(),
@@ -189,6 +190,64 @@ describe('Presentation — Test Case List Tools', () => {
 // Write tools
 // ────────────────────────────────────────────
 describe('Presentation — Test Case Write Tools', () => {
+  it('testcase_update updates metadata', async () => {
+    vi.mocked(tcSvc.updateTestCase).mockResolvedValue(
+      success({
+        id: 1,
+        name: 'Updated Name',
+        automated: true,
+        tags: [{ name: 'smoke' }],
+      })
+    );
+
+    const server = setupToolTest([registerWriteTools]);
+    const handler = getToolHandler(server, 'testcase_update');
+    const result = await handler({
+      id: 1,
+      name: 'Updated Name',
+      automated: true,
+      tags: [{ name: 'smoke' }],
+    });
+
+    const parsed = JSON.parse(result.content[0].text);
+    expect(parsed.id).toBe(1);
+    expect(parsed.name).toBe('Updated Name');
+    expect(parsed.automated).toBe(true);
+  });
+
+  it('testcase_update returns error on failure', async () => {
+    vi.mocked(tcSvc.updateTestCase).mockResolvedValue(
+      failure(new Error('Not found'))
+    );
+
+    const server = setupToolTest([registerWriteTools]);
+    const handler = getToolHandler(server, 'testcase_update');
+    const result = await handler({ id: 999, name: 'Ghost' });
+
+    expect(result.isError).toBe(true);
+    expect(result.content[0].text).toContain('Not found');
+  });
+
+  it('testcase_update normalizes \\n in text fields', async () => {
+    vi.mocked(tcSvc.updateTestCase).mockResolvedValue(
+      success({ id: 1, name: 'NL' })
+    );
+
+    const server = setupToolTest([registerWriteTools]);
+    const handler = getToolHandler(server, 'testcase_update');
+    await handler({
+      id: 1,
+      precondition: 'Line1\\nLine2',
+    });
+
+    expect(tcSvc.updateTestCase).toHaveBeenCalledWith(
+      1,
+      expect.objectContaining({
+        precondition: 'Line1\nLine2',
+      })
+    );
+  });
+
   it('testcase_update_step updates a step', async () => {
     vi.mocked(tcSvc.updateScenarioStep).mockResolvedValue(
       success({ root: { children: [1] } })

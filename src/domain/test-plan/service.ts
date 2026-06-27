@@ -17,6 +17,30 @@ import {
 } from '@shared/pagination.js';
 import { Result, map } from '@shared/result.js';
 
+/** List test plans for a project with pagination. */
+export const listTestPlans = async (
+  projectId: number,
+  params?: PageParams
+): Promise<Result<Paginated<TestPlanDto>, Error>> => {
+  const { page, size, sort } = normalizePageParams(params);
+
+  const response = await apiGet<PageDto<TestPlanDto>>('/api/testplan', {
+    projectId,
+    page,
+    size,
+    sort,
+  });
+
+  return map(response, (data) =>
+    createPaginated(
+      data.content ?? [],
+      data.number ?? page,
+      data.size ?? size,
+      data.totalElements
+    )
+  );
+};
+
 /** Get a test plan by ID. */
 export const getTestPlan = async (
   id: number

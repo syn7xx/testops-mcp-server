@@ -70,3 +70,12 @@ export const getProjectById = async (
 ): Promise<Result<ProjectDto, Error>> => {
   return apiGet<ProjectDto>(`/api/project/${id}`);
 };
+
+/** Get test case trees for a project. */
+export const getProjectTestTrees = async (
+  projectId: number
+): Promise<Result<Array<{ id: number; name: string }>, Error>> => {
+  return apiGet<Array<{ id: number; name: string }>>(
+    `/api/project/${projectId}/tree`
+  );
+};

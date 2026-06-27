@@ -1,5 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import {
+  listLaunches,
+  getLaunch,
   createLaunch,
   stopLaunch,
   getLaunchStatistic,
@@ -20,6 +22,79 @@ describe('Domain — Launch Service', () => {
   beforeEach(() => {
     fetchMock = setupFetchMock();
     initTestApiClient();
+  });
+
+  describe('listLaunches', () => {
+    it('returns paginated launches', async () => {
+      mockJwtResponse(fetchMock);
+      fetchMock.mockResolvedValueOnce(
+        mockApiResponse({
+          content: [
+            { id: 1, name: 'Launch 1', projectId: 10 },
+            { id: 2, name: 'Launch 2', projectId: 10 },
+          ],
+          totalElements: 2,
+          number: 0,
+          size: 50,
+        })
+      );
+
+      const result = await listLaunches(10);
+      expect(isSuccess(result)).toBe(true);
+      if (isSuccess(result)) {
+        expect(result.value.items).toHaveLength(2);
+        expect(result.value.totalElements).toBe(2);
+        expect(result.value.hasNext).toBe(false);
+      }
+    });
+
+    it('handles empty launch list', async () => {
+      mockJwtResponse(fetchMock);
+      fetchMock.mockResolvedValueOnce(
+        mockApiResponse({ content: [], totalElements: 0 })
+      );
+
+      const result = await listLaunches(10);
+      expect(isSuccess(result)).toBe(true);
+      if (isSuccess(result)) {
+        expect(result.value.items).toHaveLength(0);
+        expect(result.value.totalElements).toBe(0);
+      }
+    });
+
+    it('returns failure on API error', async () => {
+      mockJwtResponse(fetchMock);
+      fetchMock.mockResolvedValueOnce(
+        mockApiResponse('Server error', 500, 'Internal Server Error')
+      );
+
+      const result = await listLaunches(10);
+      expect(isSuccess(result)).toBe(false);
+    });
+  });
+
+  describe('getLaunch', () => {
+    it('fetches launch by ID', async () => {
+      mockJwtResponse(fetchMock);
+      fetchMock.mockResolvedValueOnce(
+        mockApiResponse({ id: 1, name: 'My Launch', projectId: 10 })
+      );
+
+      const result = await getLaunch(1);
+      expect(isSuccess(result)).toBe(true);
+      if (isSuccess(result)) {
+        expect(result.value.id).toBe(1);
+        expect(result.value.name).toBe('My Launch');
+      }
+    });
+
+    it('returns failure on 404', async () => {
+      mockJwtResponse(fetchMock);
+      fetchMock.mockResolvedValueOnce(mockApiResponse('Not found', 404));
+
+      const result = await getLaunch(999);
+      expect(isSuccess(result)).toBe(false);
+    });
   });
 
   describe('createLaunch', () => {

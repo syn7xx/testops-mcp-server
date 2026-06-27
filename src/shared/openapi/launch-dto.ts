@@ -57,6 +57,7 @@ export interface LaunchCreateDto {
   projectId: number;
   autoclose?: boolean;
   external?: boolean;
+  envVarValueSets?: EnvironmentSetDto[];
   issues?: IssueDto[];
   links?: ExternalLinkDto[];
   releaseId?: number;

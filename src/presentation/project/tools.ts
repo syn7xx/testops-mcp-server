@@ -5,6 +5,7 @@ import {
   findProjects,
   findProjectByName,
   getProjectById,
+  getProjectTestTrees,
 } from '@domain/project/index.js';
 import { handleResult } from '../tool-utils.js';
 
@@ -75,5 +76,19 @@ export const registerProjectTools = (server: McpServer) => {
       }),
     },
     async (args: { id: number }) => handleResult(await getProjectById(args.id))
+  );
+
+  server.registerTool(
+    'project_get_test_case_trees',
+    {
+      title: 'Get Project Test Case Trees',
+      description:
+        'Get test case trees for a project. Use the returned tree IDs with testcase_list_in_tree.',
+      inputSchema: z.object({
+        projectId: z.number().describe('Project ID'),
+      }),
+    },
+    async (args: { projectId: number }) =>
+      handleResult(await getProjectTestTrees(args.projectId))
   );
 };

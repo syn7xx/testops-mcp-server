@@ -1,4 +1,4 @@
-import { apiGet } from '@shared/api.js';
+import { apiGet, apiPatch } from '@shared/api.js';
 import type { PageDto } from '@shared/openapi/common-dto.js';
 import type {
   NormalizedScenarioDto,
@@ -126,6 +126,28 @@ export const listTestCasesInTree = async (
       baseAql: params?.baseAql,
     }
   );
+};
+
+/** Update test case metadata (name, description, status, tags, etc.). */
+export const updateTestCase = async (
+  id: number,
+  data: {
+    name?: string;
+    description?: string;
+    automated?: boolean;
+    external?: boolean;
+    fullName?: string;
+    precondition?: string;
+    postcondition?: string;
+    expectedResult?: string;
+    statusId?: number;
+    testLayerId?: number;
+    workflowId?: number;
+    tags?: Array<{ name: string }>;
+    links?: Array<{ name?: string; type?: string; url?: string }>;
+  }
+): Promise<Result<TestCaseDto, Error>> => {
+  return apiPatch<TestCaseDto>(`/api/testcase/${id}`, data);
 };
 
 export const searchTestCasesByAQL = async (

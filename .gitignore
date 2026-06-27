@@ -17,3 +17,6 @@ coverage/
 *.iml
 
 spec/
+
+# worktrees
+.worktrees/

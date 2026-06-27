@@ -8,6 +8,7 @@ import type {
 } from '@shared/openapi/test-case-dto.js';
 import {
   createTestCase,
+  updateTestCase,
   createScenarioStep,
   updateScenarioStep,
   setTestCaseScenario,
@@ -22,6 +23,82 @@ function normalizeLineBreaks(text: string | undefined): string | undefined {
 }
 
 export function registerWriteTools(server: McpServer) {
+  server.registerTool(
+    'testcase_update',
+    {
+      title: 'Update Test Case',
+      description:
+        'Update test case metadata (name, description, status, tags, etc.). Does NOT change steps or custom fields — use testcase_set_scenario / testcase_update_custom_fields for those.',
+      inputSchema: z.object({
+        id: z.number().describe('Test case ID'),
+        name: z.string().optional().describe('New name'),
+        description: z.string().optional().describe('New description'),
+        automated: z.boolean().optional().describe('Is automated'),
+        external: z.boolean().optional().describe('Is external'),
+        fullName: z.string().optional().describe('Full qualified name'),
+        precondition: z
+          .string()
+          .optional()
+          .describe('Precondition (use \\n for line breaks)'),
+        postcondition: z
+          .string()
+          .optional()
+          .describe('Postcondition (use \\n for line breaks)'),
+        expectedResult: z.string().optional().describe('Expected result'),
+        statusId: z.number().optional().describe('Status ID'),
+        testLayerId: z.number().optional().describe('Test layer ID'),
+        workflowId: z.number().optional().describe('Workflow ID'),
+        tags: z
+          .array(z.object({ name: z.string() }))
+          .optional()
+          .describe('Tags to set (replaces existing)'),
+        links: z
+          .array(
+            z.object({
+              name: z.string().optional(),
+              type: z.string().optional(),
+              url: z.string().optional(),
+            })
+          )
+          .optional()
+          .describe('External links'),
+      }),
+    },
+    async (args: {
+      id: number;
+      name?: string;
+      description?: string;
+      automated?: boolean;
+      external?: boolean;
+      fullName?: string;
+      precondition?: string;
+      postcondition?: string;
+      expectedResult?: string;
+      statusId?: number;
+      testLayerId?: number;
+      workflowId?: number;
+      tags?: Array<{ name: string }>;
+      links?: Array<{ name?: string; type?: string; url?: string }>;
+    }) =>
+      handleResult(
+        await updateTestCase(args.id, {
+          name: args.name,
+          description: args.description,
+          automated: args.automated,
+          external: args.external,
+          fullName: args.fullName,
+          precondition: normalizeLineBreaks(args.precondition),
+          postcondition: normalizeLineBreaks(args.postcondition),
+          expectedResult: args.expectedResult,
+          statusId: args.statusId,
+          testLayerId: args.testLayerId,
+          workflowId: args.workflowId,
+          tags: args.tags,
+          links: args.links,
+        })
+      )
+  );
+
   server.registerTool(
     'testcase_update_step',
     {
